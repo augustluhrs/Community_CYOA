@@ -1,0 +1,23 @@
+{
+  "name": "community_cyoa",
+  "version": "1.0.0",
+  "description": "Discord bot for a community-generated Choose-Your-Own-Adventure story where whenever a reader gets to a dead-end node, they have to write that section of the story.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/augustluhrs/Community_CYOA.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/augustluhrs/Community_CYOA/issues"
+  },
+  "homepage": "https://github.com/augustluhrs/Community_CYOA#readme",
+  "dependencies": {
+    "discord.js": "^12.4.0",
+    "dotenv": "^8.2.0"
+  }
+}
