@@ -18,6 +18,7 @@
   "homepage": "https://github.com/augustluhrs/Community_CYOA#readme",
   "dependencies": {
     "discord.js": "^12.4.0",
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "nedb": "^1.8.0"
   }
 }
