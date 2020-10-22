@@ -11,7 +11,8 @@ First Steps
 - ~~hello world~~
 - basic story response structure
 - ~~private message~~
-- save story to file and read from file
+- ~~save story to file and read from file~~
+- tutorial 
 
 
 Stretch
