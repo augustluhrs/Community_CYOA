@@ -9,7 +9,7 @@ Based on [this one](https://github.com/CodingTrain/Discord-Bot-Choo-Choo) in par
 
 First Steps
 - ~~hello world~~
-- basic story response structure
+- ~~basic story response structure~~
 - ~~private message~~
 - ~~save story to file and read from file~~
 - tutorial 
