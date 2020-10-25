@@ -12,11 +12,23 @@ First Steps
 - ~~basic story response structure~~
 - ~~private message~~
 - ~~save story to file and read from file~~
-- tutorial 
+- tutorial on !help
 
+Second Steps
+- redo instructions for clarity
+- use currentStories to prevent duplicate nodes if concurrent players land on same spot
+- setting up channel specific stories, scalable
+- ~~giving admins edit access~~
+- edit process
+- new story ability
+- how to guide for adding to channels
 
 Stretch
 - story visualization tree map
 - real time multiplayer with voting on next node and collab story at end
 - nodes that can link to existing nodes/return to checkpoints
 - personal stats
+
+
+### HOW TO ADD
+- to edit, user needs administrator or manage_channels permissions
