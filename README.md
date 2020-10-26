@@ -17,11 +17,13 @@ First Steps
 Second Steps
 - redo instructions for clarity
 - use currentStories to prevent duplicate nodes if concurrent players land on same spot
-- setting up channel specific stories, scalable
+- ~~setting up channel specific stories, scalable~~
 - ~~giving admins edit access~~
 - edit process
-- new story ability
+- ~~new story ability~~
 - how to guide for adding to channels
+- test branch instead of commiting to main
+- perma-run on glitch
 
 Stretch
 - story visualization tree map
