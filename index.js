@@ -7,29 +7,6 @@ const Datastore = require('nedb');
 //now just making one database with all the different stories in it
 var db = new Datastore({filename: "secret_stories/discordStories.db", autoload: true});
 
-
-
-
-// db.update({type: "globalData"}, {$set: {"timeLastUsed": Date.now()}}, {upsert: true}, function(err, upsert){
-//     console.log("err: " + err);
-//     console.log("upsert: " + upsert);
-// });
-//not sure why above is creating two diff docs with same id...
-
-//i don't know how to just start the db with a story doc, when i tried adding it manually it got corrupted
-// db.update({type: "passage", path: "0", branches: "3", passage: "We begin on a train barrelling down House Orien's Lighning Rail Line. We are about to begin a journey of discovery... a journey of mystery... a journey of stupid shit, endless stupid shit. But first, which car should we go to? \n Type !0 to start in the PASSENGER CAR \n Type !1 to start in the CAFE CAR \n Type !2 to start in the PANGOLIN CAR"}, {upsert: true}, function(err, newDoc){
-//     console.log("err: " + err);
-// });
-
-// db.insert({type: "passage", path: "0", branches: "3", passage: "We begin on a train barrelling down House Orien's Lighning Rail Line. We are about to begin a journey of discovery... a journey of mystery... a journey of stupid shit, endless stupid shit. But first, which car should we go to? \n Type !0 to start in the PASSENGER CAR \n Type !1 to start in the CAFE CAR \n Type !2 to start in the PANGOLIN CAR"});
-
-//no idea how to get rid of trash created while debugging
-// db.remove({path: "01"});
-// db.remove({path: "00"});
-// db.remove({path: "02"});
-
-
-
 // Discord stuff
 const Discord = require('discord.js');
 const client = new Discord.Client();
@@ -41,9 +18,6 @@ require('dotenv').config();
 
 //story user stuff
 let currentStories = [];
-
-
-
 
 client.once('ready', () => {
   console.log('Ready!');
@@ -61,13 +35,23 @@ function gotMessage(msg) {
     if(msg.content === '!help'){
         //TODO update tutorial
         msg.channel.send('to start the story type "!start" and I\'ll send you a private message with the beginning of your story.');
+        //list of commands: new edit start
+        //help sections: story,     
     }
-    if(msg.content === '!new'){ //start a new story in that channel
+    if(msg.content.startsWith('!new ') && msg.channel.type != 'dm'){  //start a new story in that channel
 
-        //special role permission, no anyone can make a new story
+        //special role permission? no, anyone can make a new story
+        let newStoryName = msg.content.substr(5);
+        console.log("new Story Name: " + newStoryName);
+        let numStories;
+        db.find({type:"story", channel: msg.channel.id}, function(err, docs){
+            console.log("new story err: " + err);
+            numStories = docs.length.toString();
 
-        //if already a story in that channel TODO
+            db.insert({type: "story", channel: msg.channel.id, path: numStories, name: newStoryName, branches: "1", passage: "Welcome to " + newStoryName + "! Please type \"!0\" to begin."});
 
+            msg.channel.send('Successfully created new story: ' + newStoryName);
+        });
     }
     if(msg.content === '!edit'){
         //if has admin powers, send to private message
@@ -80,8 +64,8 @@ function gotMessage(msg) {
             msg.channel.send('Sorry you don\'t have permission to do that, you need to have ADMINISTRATOR or MANAGE_CHANNELS permissions.');
         }
     }
-    //TODO if startswith(), then go down, but if addtl after !start, check against path tags, else no story by that name.
-    if(msg.content === '!start'){
+  
+    if(msg.content.startsWith('!start')){
         //if no story yet, prompt with !new
         db.find({channel: msg.channel.id}, function(err, docs){
             console.log("!start err: " + err);
@@ -89,55 +73,50 @@ function gotMessage(msg) {
                 msg.channel.send('There\'s no story in this channel yet! Please type "!new" to create one.');
                 return;
             } else { //good to go
-                //if more than one story, need to ask which to play TODO
-                // db.find({channel: msg.channel.id, path: }, function(err, docs){
-                        //look up REGEX, see if you can only find paths with one number in the string (length 1?)
+
+                let storyName = msg.content.substr(7);
+                console.log("story Name: " + storyName);
+                db.find({channel: msg.channel.id, type: "story", name: storyName }, function(err, docs){
                 
                     if(docs.length == 1){//only one story
+                        msg.channel.send('starting! check your private messages please ~ * ~ *');  
+                        // client.users.cache.get(msg.author.id).send('welcome. here is your story:');
+
+                        //check all current stories and see if this user played before but didn't finish, delete that
+                        for(let i  = currentStories.length - 1; i >= 0; i--){
+                            if(currentStories[i].player == msg.author.username){
+                                currentStories.splice(i, 1);
+                            }
+                        }
+                        console.log("docs path: " + docs[0].name);
+                        let newPlaythrough = {
+                            player: msg.author.username,
+                            channel: msg.channel.id,
+                            path: docs[0].path,
+                            isWritingNewNode: false,
+                            hasFinishedPassage: false
+                        }
+                        currentStories.push(newPlaythrough);
+
+                        // db.find({path: docs[0].path}, function(err, docs) {
+                        //     console.log('starting story err: ' + err);
+                        client.users.cache.get(msg.author.id).send(docs[0].passage);
+                        // });
 
 
-
-
-
-
-                    } else {
-                        let storyList = '';
-                        docs.forEach() //send the user prompt for new !start
+                    } else { //no story by that name
+                        msg.channel.send('Which story would you like to play? Type "!start " followed by one of the following story names: \n');
+                        db.find({channel: msg.channel.id, type: "story"}, function(err, docs){
+                            console.log('listing story names err: ' + err);
+                            docs.forEach(doc => msg.channel.send(doc.name + "\n")); 
+                        });
+                         
                     }
                 
-                // });
-
-                //start the game for that user in their private messages
-                msg.channel.send('starting! check your private messages please ~ * ~*');  
-                client.users.cache.get(msg.author.id).send('welcome. here is your story:');
-                
-                //check all current stories and see if this user played before but didn't finish, delete that
-                for(let i  = currentStories.length - 1; i >= 0; i--){
-                    if(currentStories[i].player == msg.author.username){
-                        currentStories.splice(i, 1);
-                    }
-                }
-                let newPlaythrough = {
-                    player: msg.author.username,
-                    channel: msg.channel.id,
-                    path: "0", //eventually will start diff stories depending on !start TODO
-                    isWritingNewNode: false,
-                    hasFinishedPassage: false
-                }
-                currentStories.push(newPlaythrough);
-
-                db.find({path: "0"}, function(err, docs) {
-                    client.users.cache.get(msg.author.id).send(docs[0].passage);
                 });
             }
         });
-
-
     }
-    //how to start on specific story?
-
-
-
 
     if (msg.channel.type == "dm") { //DM channel
         //first make sure it's not the bot
@@ -148,7 +127,7 @@ function gotMessage(msg) {
         for(let i = 0; i < currentStories.length; i++){
             if(currentStories[i].player == msg.author.username) myStory = i; //first time using no {} in if statement...
         }
-        console.log("mystory: " + myStory);
+        console.log("my story: " + myStory);
         if(myStory == null) {
             //if they try to start from the dm
             client.users.cache.get(msg.author.id).send('something\'s wrong, please start from the server channel, not here.');
@@ -161,16 +140,10 @@ function gotMessage(msg) {
             // let wtf = 0;
             console.log("current path: " + currentStories[myStory].path);
             //the function in db.find not working how i expect... it's going too slowly
-            db.find({$and: [{path: currentStories[myStory].path}, {branches: {$exists: true}}]}, function(err, docs){ // wait, why do i need $and? i don't right?
+            db.find({channel: currentStories[myStory].channel, path: currentStories[myStory].path}, function(err, docs){ 
                 console.log('branch err:' + err);
                 console.log("docs:" + docs);
                 branches = parseInt(docs[0].branches);
-                // console.log(branches);
-                // for(let j = 0; j < docs.length; j++){
-                //     console.log("i: " + j + " branchnum: " + docs[j].branches);
-                // }
-                // return b;
-                // wtf++;
 
                 //check for next story command
                 let hasStoryProgressed = false;
@@ -182,9 +155,9 @@ function gotMessage(msg) {
                         hasStoryProgressed = true;
                     }
                 }
-                if(!hasStoryProgressed){
+                if(!hasStoryProgressed){ //if they don't type correctly
                     client.users.cache.get(msg.author.id).send('sorry, thats not an option I understand, please pick again');
-                } else {
+                } else { //progress story
                     db.find({path: currentStories[myStory].path}, function(err, docs){
                         console.log("next section err: " + err);
                         if(docs[0] == null){
@@ -200,7 +173,8 @@ function gotMessage(msg) {
         } else { //is writing a new story node
             if(!currentStories[myStory].hasFinishedPassage){ //has written passage, update the doc
                 console.log('new story from ' + currentStories[myStory].player + " at " + currentStories[myStory].path + ": " + msg.content);
-                db.update({path: currentStories[myStory].path}, {path: currentStories[myStory].path, passage: msg.content, branches: 0}, {upsert: true}, function(err, newDoc){ //not sure if it matters to update/upsert rather than just insert since if all works, there won't be a doc matching the query...
+                //why am i updating this one? not insert?
+                db.update({path: currentStories[myStory].path}, {channel: currentStories[myStory].channel, path: currentStories[myStory].path, passage: msg.content, branches: 0}, {upsert: true}, function(err, newDoc){ //not sure if it matters to update/upsert rather than just insert since if all works, there won't be a doc matching the query...
                     console.log("err: " + err);
                 });
                 currentStories[myStory].hasFinishedPassage = true;
@@ -230,7 +204,6 @@ function gotMessage(msg) {
                             console.log("option err: " + err);
                         });
                     });
-                    
                     
                     client.users.cache.get(msg.author.id).send('Great. Type in the next option or type END to finish.');
                 }
