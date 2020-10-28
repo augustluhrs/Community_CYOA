@@ -31,7 +31,8 @@ Second Steps
 - ~~perma-run on glitch~~
 - feedback command
 - show which paths have been answered already!
-- figure out how to import to glitch without erasing files -- guess i could just export before importing
+- ~~test exporting the stories ~~
+- ~~figure out how to import to glitch without erasing files -- guess i could just export before importing~~
 
 Stretch
 - save that story to file or email it or something
