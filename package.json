@@ -4,7 +4,8 @@
   "description": "Discord bot for a community-generated Choose-Your-Own-Adventure story where whenever a reader gets to a dead-end node, they have to write that section of the story.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",

@@ -5,7 +5,10 @@ const Datastore = require('nedb');
 // var db = new Datastore({filename: "secret_stories/eberronStory.db", autoload: true});
 
 //now just making one database with all the different stories in it
-var db = new Datastore({filename: "secret_stories/discordStories.db", autoload: true});
+// var db = new Datastore({filename: "secret_stories/discordStories.db", autoload: true});
+var db = new Datastore({filename: "public/discordStories.db", autoload: true});
+
+
 
 // Discord stuff
 const Discord = require('discord.js');
@@ -64,6 +67,7 @@ function gotMessage(msg) {
             Once a story is created, it will start completely blank. The first passage in the story is written by the first person to !start that story.\n\n\
             A player navigates through the different branches or choices of the story until they reach a part of the story no one has written yet.\
             They\'ll then be instructed to write that next passage and the choices that branch off from it.\n\n\
+            Note: Right now all stories are public on the github server, don\'t type any stories with personal information!\n\n\
             This discord bot was made by August Luhrs @augustluhrs or @deadaugust\n\
             based on a idea from Marie Claire LeBlanc Flanagan @omarieclaire\n\
             hosted on Glitch.com\n\
