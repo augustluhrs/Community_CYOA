@@ -26,6 +26,7 @@ Second Steps
 - perma-run on glitch
 
 Stretch
+- save that story to file or email it or something
 - story visualization tree map
 - real time multiplayer with voting on next node and collab story at end
 - nodes that can link to existing nodes/return to checkpoints
