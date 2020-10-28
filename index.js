@@ -38,41 +38,41 @@ function gotMessage(msg) {
     if(msg.content === '!help'){
         //main help section
         msg.channel.send('hello! here\'s a list of commands I know:\n\
-            !start : lists the stories ready to play in this channel [channel only]\n\
-            !start : STORYNAME starts a new playthrough of that story in your private messages (case sensitive) [channel only]\n\
-            !new : STORYNAME creates a new story in that channel with the name *storyname* [channel only]\n\
-            !edit : allows administrators or those with channel permissions to edit stories from their PMs [channel only]\n\
-            !help : brings up this exact message...\n\
-            !help story : brings up more instructions about how to play through a story\n\
-            !help about : gives you an overview of what this is all about!\n\
-            !feedback : [currently disabled] sends a message to your PM so you can report bugs, give notes, request features, etc.\n\n\
-            Thanks!');
+        !start : lists the stories ready to play in this channel [channel only]\n\
+        !start : STORYNAME starts a new playthrough of that story in your private messages (case sensitive) [channel only]\n\
+        !new : STORYNAME creates a new story in that channel with the name *storyname* [channel only]\n\
+        !edit : allows administrators or those with channel permissions to edit stories from their PMs [channel only]\n\
+        !help : brings up this exact message...\n\
+        !help story : brings up more instructions about how to play through a story\n\
+        !help about : gives you an overview of what this is all about!\n\
+        !feedback : [currently disabled] sends a message to your PM so you can report bugs, give notes, request features, etc.\n\n\
+        Thanks!');
     }
     if(msg.content === '!help story'){
         msg.channel.send('To play a story, type "!start" to see what the current stories in this channel are.\
-            Once you know the title of the story you want to play, type "!start" followed by that story\'s name.\n\
-            For example, if I have a story called "My Story", I\'d type "!start My Story". Keep in mind spaces and capitalization.\n\n\
-            Then I\'ll send you a private message to start the story.\n\n\
-            Once in your PMs, you can read one passage at a time then navigate to the next part of the story by\
-            using the commands "!0","!1", and so on, depending on which path you want to go down.\n\
-            Some paths lead to empty ends, which are blank passages that no one has written yet -- that means it\'s your turn to write them!\
-            First, you\'ll write just the passage, so just the story and no choices branching off of it.\
-            Then, after you send me that, I\'ll ask you for the choices one at a time. Just type the word or phrase associated with that choice, i.e. "Go left" or "Say hi to the sentient chair".\
-            I\'ll automatically add the "!x" commands. Once you\'ve sent me each choice branching off from that passage, type "END" to finish the process. That\'s it!');
+        Once you know the title of the story you want to play, type "!start" followed by that story\'s name.\n\
+        For example, if I have a story called "My Story", I\'d type "!start My Story". Keep in mind spaces and capitalization.\n\n\
+        Then I\'ll send you a private message to start the story.\n\n\
+        Once in your PMs, you can read one passage at a time then navigate to the next part of the story by\
+        using the commands "!0","!1", and so on, depending on which path you want to go down.\n\
+        Some paths lead to empty ends, which are blank passages that no one has written yet -- that means it\'s your turn to write them!\
+        First, you\'ll write just the passage, so just the story and no choices branching off of it.\
+        Then, after you send me that, I\'ll ask you for the choices one at a time. Just type the word or phrase associated with that choice, i.e. "Go left" or "Say hi to the sentient chair".\
+        I\'ll automatically add the "!x" commands. Once you\'ve sent me each choice branching off from that passage, type "END" to finish the process. That\'s it!');
             // For more help with the story playthrough, type "!help story" from your PMs.');
     }
     if(msg.content === '!help about'){
         msg.channel.send('Hi! This is a discord bot about making a collaborative Choose-Your-Own-Adventure game.\
-            From any channel in this server, you can create stories for anyone in that channel to read and play.\
-            Once a story is created, it will start completely blank. The first passage in the story is written by the first person to !start that story.\n\n\
-            A player navigates through the different branches or choices of the story until they reach a part of the story no one has written yet.\
-            They\'ll then be instructed to write that next passage and the choices that branch off from it.\n\n\
-            Note: Right now all stories are public on the github server, don\'t type any stories with personal information!\n\n\
-            This discord bot was made by August Luhrs @augustluhrs or @deadaugust\n\
-            based on a idea from Marie Claire LeBlanc Flanagan @omarieclaire\n\
-            hosted on Glitch.com\n\
-            GitHub Repo at https://github.com/augustluhrs/Community_CYOA.com -- feel free to make pull requests or fork to make your own!\n\
-            Thanks so much for playing!');
+        From any channel in this server, you can create stories for anyone in that channel to read and play.\
+        Once a story is created, it will start completely blank. The first passage in the story is written by the first person to !start that story.\n\n\
+        A player navigates through the different branches or choices of the story until they reach a part of the story no one has written yet.\
+        They\'ll then be instructed to write that next passage and the choices that branch off from it.\n\n\
+        Note: Right now all stories are public on the github server, don\'t type any stories with personal information!\n\n\
+        This discord bot was made by August Luhrs @augustluhrs or @deadaugust\n\
+        based on a idea from Marie Claire LeBlanc Flanagan @omarieclaire\n\
+        hosted on Glitch.com\n\
+        GitHub Repo at https://github.com/augustluhrs/Community_CYOA.com -- feel free to make pull requests or fork to make your own!\n\
+        Thanks so much for playing!');
     }
     if(msg.content.startsWith('!new ') && msg.channel.type != 'dm'){  //start a new story in that channel
 
