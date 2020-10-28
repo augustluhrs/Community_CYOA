@@ -27,6 +27,7 @@ Second Steps
 - ~~perma-run on glitch~~
 - feedback command
 - show which paths have been answered already!
+- test exporting the stories only
 
 Stretch
 - save that story to file or email it or something
