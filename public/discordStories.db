@@ -1,5 +1,0 @@
-{"type":"story","channel":"768556747139973171","path":"0","name":"test","branches":"1","passage":"Welcome to test! Please type \"!0\" to begin.","_id":"jFSzrXBLMlWxZDQj"}
-{"channel":"768556747139973171","path":"00","passage":"testing","branches":0,"_id":"SXhLNskKPmta3uZV"}
-{"channel":"768556747139973171","path":"00","passage":"testing\n\n !0: 1","branches":1,"_id":"SXhLNskKPmta3uZV"}
-{"channel":"768556747139973171","path":"00","passage":"testing\n\n !0: 1\n\n !1: 2","branches":2,"_id":"SXhLNskKPmta3uZV"}
-{"channel":"768556747139973171","path":"00","passage":"testing\n\n !0: 1\n\n !1: 2\n\n !2: 3","branches":3,"_id":"SXhLNskKPmta3uZV"}
