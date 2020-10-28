@@ -22,20 +22,8 @@ require('dotenv').config();
 //story user stuff
 let currentStories = [];
 
-//timer for clearing currentStories
-let timeSinceLastPlayed;
-let clearTimer = 1000 * 60 * 60; //too lazy to find millis in an hour
-
-setInterval( () => { //checks every hour, if no new players played that hour, clear currentStories
-    if(Date.now() - timeSinceLastPlayed >= clearTimer){
-        currentStories = [];
-        console.log('clearing current stories');
-    }
-}, clearTimer);
-
 client.once('ready', () => {
   console.log('Ready!');
-  timeSinceLastPlayed = Date.now();
 });
 
 client.login(process.env.TOKEN);
@@ -47,7 +35,46 @@ function gotMessage(msg) {
     if (msg.content === 'ping') {
         msg.channel.send('pong');
     }
-    //no idea why \n\ was adding such weird spaces in discord, using "template literal"? now
+    // if(msg.content === '!help'){
+    //     //main help section
+    //     msg.channel.send('hello! here\'s a list of commands I know:\n\
+    //     !start : lists the stories ready to play in this channel [channel only]\n\
+    //     !start STORYNAME : starts a new playthrough of that story in your private messages (case sensitive) [channel only]\n\
+    //     !new STORYNAME : creates a new story in that channel with the name STORYNAME [channel only]\n\
+    //     !edit : allows administrators or those with channel permissions to edit stories from their PMs [channel only]\n\
+    //     !help : brings up this exact message...\n\
+    //     !help story : brings up more instructions about how to play through a story\n\
+    //     !help about : gives you an overview of what this is all about!\n\
+    //     !feedback : [currently disabled] sends a message to your PM so you can report bugs, give notes, request features, etc.\n\n\
+    //     Thanks!');
+    // }
+    // if(msg.content === '!help story'){
+    //     msg.channel.send('To play a story, type "!start" to see what the current stories in this channel are.\
+    //     Once you know the title of the story you want to play, type "!start" followed by that story\'s name.\n\
+    //     For example, if I have a story called "My Story", I\'d type "!start My Story". Keep in mind spaces and capitalization.\n\n\
+    //     Then I\'ll send you a private message to start the story.\n\n\
+    //     Once in your PMs, you can read one passage at a time then navigate to the next part of the story by\
+    //     using the commands "!0","!1", and so on, depending on which path you want to go down.\n\
+    //     Some paths lead to empty ends, which are blank passages that no one has written yet -- that means it\'s your turn to write them!\
+    //     First, you\'ll write just the passage, so just the story and no choices branching off of it.\
+    //     Then, after you send me that, I\'ll ask you for the choices one at a time. Just type the word or phrase associated with that choice, i.e. "Go left" or "Say hi to the sentient chair".\
+    //     I\'ll automatically add the "!x" commands. Once you\'ve sent me each choice branching off from that passage, type "END" to finish the process. That\'s it!');
+    //         // For more help with the story playthrough, type "!help story" from your PMs.');
+    // }
+    // if(msg.content === '!help about'){
+    //     msg.channel.send('Hi! This is a discord bot about making a collaborative Choose-Your-Own-Adventure game.\
+    //     From any channel in this server, you can create stories for anyone in that channel to read and play.\
+    //     Once a story is created, it will start completely blank. The first passage in the story is written by the first person to !start that story.\n\n\
+    //     A player navigates through the different branches or choices of the story until they reach a part of the story no one has written yet.\
+    //     They\'ll then be instructed to write that next passage and the choices that branch off from it.\n\n\
+    //     Note: Right now all stories are public on the github server, don\'t type any stories with personal information!\
+    //     Also this is in very early development, things may change drastically and stories may not be saved from update to update, sorry about that!\n\n\
+    //     This discord bot was made by August Luhrs @augustluhrs or @deadaugust\n\
+    //     based on a idea from Marie Claire LeBlanc Flanagan @omarieclaire\n\
+    //     hosted on Glitch.com\n\
+    //     GitHub Repo at https://github.com/augustluhrs/Community_CYOA -- feel free to make pull requests or fork to make your own!\n\
+    //     Thanks so much for playing!');
+    // }
     if(msg.content === '!help'){
         //main help section
         msg.channel.send(`hello! here\'s a list of commands I know:
@@ -94,9 +121,6 @@ function gotMessage(msg) {
         GitHub Repo at https://github.com/augustluhrs/Community_CYOA -- feel free to make pull requests or fork to make your own!
         Thanks so much for playing!`);
     }
-    if(msg.content == '!new') {
-        msg.channel.send("to create a new story, type '!new' followed by the name of your new story. Like this: '!new My Story'.\n Keep in mind this is the title players will type every time they play the story, so don't make it too long!");
-    }
     if(msg.content.startsWith('!new ') && msg.channel.type != 'dm'){  //start a new story in that channel
 
         //special role permission? no, anyone can make a new story
@@ -141,13 +165,12 @@ function gotMessage(msg) {
                         msg.channel.send('starting! check your private messages please ~ * ~ *');  
                         // client.users.cache.get(msg.author.id).send('welcome. here is your story:');
 
-                        //not doing this anymore to prevent mid-story splicing
                         //check all current stories and see if this user played before but didn't finish, delete that
-                        // for(let i  = currentStories.length - 1; i >= 0; i--){
-                        //     if(currentStories[i].player == msg.author.username){
-                        //         currentStories.splice(i, 1);
-                        //     }
-                        // }
+                        for(let i  = currentStories.length - 1; i >= 0; i--){
+                            if(currentStories[i].player == msg.author.username){
+                                currentStories.splice(i, 1);
+                            }
+                        }
                         console.log("docs path: " + docs[0].name);
                         let newPlaythrough = {
                             player: msg.author.username,
@@ -157,8 +180,6 @@ function gotMessage(msg) {
                             hasFinishedPassage: false
                         }
                         currentStories.push(newPlaythrough);
-                        //reset timer
-                        timeSinceLastPlayed = Date.now();
 
                         // db.find({path: docs[0].path}, function(err, docs) {
                         //     console.log('starting story err: ' + err);
@@ -186,8 +207,7 @@ function gotMessage(msg) {
 
         //find this users story
         let myStory;
-        // for(let i = 0; i < currentStories.length; i++){
-        for(let i = currentStories.length  -1; i >= 0; i--){ //now starting at end 
+        for(let i = 0; i < currentStories.length; i++){
             if(currentStories[i].player == msg.author.username) myStory = i; //first time using no {} in if statement...
         }
         console.log("my story: " + myStory);
@@ -212,21 +232,10 @@ function gotMessage(msg) {
                 let hasStoryProgressed = false;
                 for(let b = 0; b < branches; b++){
                     // console.log("option: " + b);
-                    if(msg.content == "!" + b){ 
-                        //check to make sure no other player is currently on that node to prevent overwriting new nodes
-                        let isOverlap = false;
-                        for(let p = 0; p < currentStories.length; p++){
-                            // if (p == myStory) continue;
-                            if(currentStories[p].path == currentStories[myStory].path && currentStories[p].id != currentStories[myStory].id){
-                                client.users.cache.get(msg.author.id).send('sorry, someone else is currently on that part of the story. wait a bit for them to finish or please pick another option.');
-                                isOverlap = true;
-                            }
-                        }
-                        if(!isOverlap){
-                            console.log('branch chosen: ' + b);
-                            currentStories[myStory].path = currentStories[myStory].path.concat(b); //because concat just returns other string, doesn't modify source?
-                            hasStoryProgressed = true;
-                        }
+                    if(msg.content == "!" + b){
+                        console.log('branch chosen: ' + b);
+                        currentStories[myStory].path = currentStories[myStory].path.concat(b); //because concat just returns other string, doesn't modify source?
+                        hasStoryProgressed = true;
                     }
                 }
                 if(!hasStoryProgressed){ //if they don't type correctly
@@ -256,7 +265,7 @@ function gotMessage(msg) {
             } else { //finished passage, now update the branches
                 if(msg.content == "END" || msg.content == "end" || msg.content == "End" || msg.content == "end " || msg.content == "END "){ //gotta be a better way to do this.
                     client.users.cache.get(msg.author.id).send('Thanks for playing! Go back to the server channel whenever you want to play again.');
-                    // currentStories.splice(myStory,1); //now not splicing until timeout to prevent splicing mid-story multiplayer
+                    currentStories.splice(myStory,1);
                     // currentStories[myStory].isWritingNewNode = false;
                     // currentStories[myStory].hasFinishedPassage = false; //not needed but just in case?
                 } else {
