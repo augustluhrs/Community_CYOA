@@ -23,7 +23,8 @@ Second Steps
 - ~~new story ability~~
 - how to guide for adding to channels
 - test branch instead of commiting to main
-- perma-run on glitch
+- ~~perma-run on glitch~~
+- feedback command
 
 Stretch
 - save that story to file or email it or something
