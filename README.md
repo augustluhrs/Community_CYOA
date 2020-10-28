@@ -12,10 +12,11 @@ First Steps
 - ~~basic story response structure~~
 - ~~private message~~
 - ~~save story to file and read from file~~
-- tutorial on !help
+- ~~tutorial on !help~~
 
 Second Steps
 - redo instructions for clarity
+- fix weird indentations on !help
 - use currentStories to prevent duplicate nodes if concurrent players land on same spot
 - ~~setting up channel specific stories, scalable~~
 - ~~giving admins edit access~~
@@ -25,6 +26,7 @@ Second Steps
 - test branch instead of commiting to main
 - ~~perma-run on glitch~~
 - feedback command
+- show which paths have been answered already!
 
 Stretch
 - save that story to file or email it or something
