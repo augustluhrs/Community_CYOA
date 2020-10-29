@@ -8,7 +8,13 @@ Made with help from Dan Shiffman's Discord Bot tutorials ([this one](https://git
 
 and Shawn Van Every's recommendation to use nedb for the database stuff!
 
-### TODO
+
+### HOW TO ADD
+- !init channel
+- to edit, user needs administrator or manage_channels permissions
+
+
+### PROJECT TO DO:
 
 First Steps
 - ~~hello world~~
@@ -35,6 +41,10 @@ Second Steps
 - ~~test exporting the stories~~
 - ~~figure out how to import to glitch without erasing files -- guess i could just export before importing~~
 - ~~init on specific channel so no server bleed~~
+- remove channel
+- ~~what's up with having two projects running at same time? issue with not turning off bot before reuploading new code? regen token for now...~~
+- ~~add stop function to shutdown bot? SIGTERM && I'm the only one who can~~
+- add code comments for others understanding
 
 Stretch
 - save that story to file or email it or something
@@ -43,6 +53,3 @@ Stretch
 - nodes that can link to existing nodes/return to checkpoints
 - personal stats
 
-
-### HOW TO ADD
-- to edit, user needs administrator or manage_channels permissions

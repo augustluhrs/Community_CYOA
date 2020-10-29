@@ -17,7 +17,7 @@ const client = new Discord.Client();
 require('dotenv').config();
 // const serverID = process.env.SERVERID;
 // const channelID = process.env.CHANNELID;
-activeChannels = []; //initialized channels
+// activeChannels = []; //initialized channels
 
 //story user stuff
 let currentStories = [];
@@ -33,6 +33,11 @@ setInterval( () => { //checks every hour, if no new players played that hour, cl
     }
 }, clearTimer);
 
+//kill function to stop bot
+process.on('SIGTERM', () => {
+    client.destroy();
+});
+
 client.once('ready', () => {
   console.log('Ready!');
   timeSinceLastPlayed = Date.now();
@@ -45,164 +50,190 @@ function gotMessage(msg) {
 
 //adding specific channel init stuff
     if(msg.content === '!init channel'){
-        activeChannels.forEach( (chan) => {
-            if(chan.id == msg.channel.id) {
+        db.find({type: "channel", channel: msg.channel.id}, function (err, docs){
+            if (docs.length == 0){
+                db.insert({type: "channel", channel: msg.channel.id});
+                msg.channel.send("Yay! This channel is now active and I'll be listening for story commands. Type '!help' for more info.")
+            } else {
                 msg.channel.send("this channel has already been initialized.");
-                return;
             }
         });
-        activeChannels.push({id: msg.channel.id});
+        // activeChannels.forEach( (chan) => {
+        //     if(chan.id == msg.channel.id) {
+        //         msg.channel.send("this channel has already been initialized.");
+        //         return;
+        //     }
+        // });
+        // activeChannels.push({id: msg.channel.id});
+        // msg.channel.send("Yay! This channel is now active and I'll be listening for story commands. Type '!help' for more info.")
     }
-    //gotta be a better way to check if channel is init
-    let isValidChannel = false;
-    activeChannels.forEach( (chan) => {
-        if(msg.channel.id == chan.id) isValidChannel = true;
-    });
-    if(isValidChannel || msg.channel.type == 'dm'){
-        if (msg.content === 'ping') {
-            msg.channel.send('pong');
-        }
-        //no idea why \n\ was adding such weird spaces in discord, using "template literal"? now
-        if(msg.content === '!help'){
-            //main help section
-            msg.channel.send(`hello! here\'s a list of commands I know:
-            !start : lists the stories ready to play in this channel [channel only]
-            !start STORYNAME : starts a new playthrough of that story in your private messages (case sensitive) [channel only]
-            !new STORYNAME : creates a new story in that channel with the name STORYNAME [channel only]
-            !edit : allows administrators or those with channel permissions to edit stories from their PMs [channel only]
-            !help : brings up this exact message...
-            !help story : brings up more instructions about how to play through a story
-            !help about : gives you an overview of what this is all about!
-            !feedback : [currently disabled] sends a message to your PM so you can report bugs, give notes, request features, etc.
-            Thanks!`);
-        }
-        if(msg.content === '!help story'){
-            msg.channel.send(`To play a story, type "!start" to see what the current stories in this channel are.
-            Once you know the title of the story you want to play, type "!start" followed by that story\'s name.
 
-            For example, if I have a story called "My Story", I\'d type "!start My Story". Keep in mind spaces and capitalization.
-            Then I\'ll send you a private message to start the story.
+    //kill process, but I'm the only one that can do it
+    if(msg.content === '!kill bot' && msg.author.id === process.env.AUGUSTID){
+        msg.channel.send("Did I do something wrong? I'm... sorr-\n\nBOT TERMINATED").then( () => {
+            //no idea if this works or not
+            process.kill(process.pid, 'SIGTERM');
+        });
+    }
 
-            Once in your PMs, you can read one passage at a time then navigate to the next part of the story by
-            using the commands "!0","!1", and so on, depending on which path you want to go down.
 
-            Some paths lead to empty ends, which are blank passages that no one has written yet -- that means it\'s your turn to write them!
-            First, you\'ll write just the passage, so just the story and no choices branching off of it.
-            Then, after you send me that, I\'ll ask you for the choices one at a time. Just type the word or phrase associated with that choice, i.e. "Go left" or "Say hi to the sentient chair".
-            I\'ll automatically add the "!x" commands. Once you\'ve sent me each choice branching off from that passage, type "END" to finish the process. That\'s it!`);
-                // For more help with the story playthrough, type "!help story" from your PMs.');
-        }
-        if(msg.content === '!help about'){
-            msg.channel.send(`Hi! This is a discord bot about making a collaborative Choose-Your-Own-Adventure game.
-            From any channel in this server, you can create stories for anyone in that channel to read and play.
-            Once a story is created, it will start completely blank. The first passage in the story is written by the first person to !start that story.
+    //gotta be a better way to check if channel is init...
 
-            A player navigates through the different branches or choices of the story until they reach a part of the story no one has written yet.
-            They\'ll then be instructed to write that next passage and the choices that branch off from it.
-
-            Note: Right now all stories are public on the github server, don\'t type any stories with personal information!
-            Also this is in very early development, things may change drastically and stories may not be saved from update to update, sorry about that!
-
-            This discord bot was made by August Luhrs @augustluhrs or @deadaugust
-            based on a idea from Marie Claire LeBlanc Flanagan @omarieclaire
-            hosted on Glitch.com
-            GitHub Repo at https://github.com/augustluhrs/Community_CYOA -- feel free to make pull requests or fork to make your own!
-            Thanks so much for playing!`);
-        }
-        if(msg.content == '!new') {
-            msg.channel.send("to create a new story, type '!new' followed by the name of your new story. Like this: '!new My Story'.\n Keep in mind this is the title players will type every time they play the story, so don't make it too long!");
-        }
-        if(msg.content.startsWith('!new ') && msg.channel.type != 'dm'){  //start a new story in that channel
-        // if(msg.content.startsWith('!new ')){  //now impossible to call in dms
-
-            //special role permission? no, anyone can make a new story
-            let newStoryName = msg.content.substr(5);
-            console.log("new Story Name: " + newStoryName);
-            let numStories;
-            db.find({type:"story", channel: msg.channel.id}, function(err, docs){
-                console.log("new story err: " + err);
-                numStories = docs.length.toString();
-
-                for(let i = 0; i < docs.length; i++){
-                    if (docs[i].name == newStoryName){
-                        msg.channel.send('sorry, a story in this channel already has that name. Please pick a new name.');
-                        return;
+    // let isValidChannel = false;
+    // activeChannels.forEach( (chan) => {
+    //     if(msg.channel.id == chan.id) isValidChannel = true;
+    // });
+    db.find({type: "channel", channel: msg.channel.id}, function (err, docs){
+        console.log("valid channel err: " + err);
+        if (docs.length != 0){
+            if (msg.content === 'ping') {
+                msg.channel.send('pong');
+            }
+            //no idea why \n\ was adding such weird spaces in discord, using "template literal"? now
+            if(msg.content === '!help'){
+                //main help section
+                msg.channel.send(`hello! here\'s a list of commands I know:
+                !start : lists the stories ready to play in this channel [channel only]
+                !start STORYNAME : starts a new playthrough of that story in your private messages (case sensitive) [channel only]
+                !new STORYNAME : creates a new story in that channel with the name STORYNAME [channel only]
+                !edit : allows administrators or those with channel permissions to edit stories from their PMs [channel only]
+                !help : brings up this exact message...
+                !help story : brings up more instructions about how to play through a story
+                !help about : gives you an overview of what this is all about!
+                !feedback : [currently disabled] sends a message to your PM so you can report bugs, give notes, request features, etc.
+                !init channel: activates a channel, you have to do this before the bot will work in any channel
+                !remove channel: [currently disabled] de-activates a channel so the bot won't work on it anymore
+                Thanks!`);
+            }
+            if(msg.content === '!help story'){
+                msg.channel.send(`To play a story, type "!start" to see what the current stories in this channel are.
+                Once you know the title of the story you want to play, type "!start" followed by that story\'s name.
+    
+                For example, if I have a story called "My Story", I\'d type "!start My Story". Keep in mind spaces and capitalization.
+                Then I\'ll send you a private message to start the story.
+    
+                Once in your PMs, you can read one passage at a time then navigate to the next part of the story by
+                using the commands "!0","!1", and so on, depending on which path you want to go down.
+    
+                Some paths lead to empty ends, which are blank passages that no one has written yet -- that means it\'s your turn to write them!
+                First, you\'ll write just the passage, so just the story and no choices branching off of it.
+                Then, after you send me that, I\'ll ask you for the choices one at a time. Just type the word or phrase associated with that choice, i.e. "Go left" or "Say hi to the sentient chair".
+                I\'ll automatically add the "!x" commands. Once you\'ve sent me each choice branching off from that passage, type "END" to finish the process. That\'s it!`);
+                    // For more help with the story playthrough, type "!help story" from your PMs.');
+            }
+            if(msg.content === '!help about'){
+                msg.channel.send(`Hi! This is a discord bot about making a collaborative Choose-Your-Own-Adventure game.
+                From any channel in this server, you can create stories for anyone in that channel to read and play.
+                Once a story is created, it will start completely blank. The first passage in the story is written by the first person to !start that story.
+    
+                A player navigates through the different branches or choices of the story until they reach a part of the story no one has written yet.
+                They\'ll then be instructed to write that next passage and the choices that branch off from it.
+    
+                Note: Right now all stories are public on the github server, don\'t type any stories with personal information!
+                Also this is in very early development, things may change drastically and stories may not be saved from update to update, sorry about that!
+    
+                This discord bot was made by August Luhrs @augustluhrs or @deadaugust
+                based on a idea from Marie Claire LeBlanc Flanagan @omarieclaire
+                hosted on Glitch.com
+                GitHub Repo at https://github.com/augustluhrs/Community_CYOA -- feel free to make pull requests or fork to make your own!
+                Thanks so much for playing!`);
+            }
+            if(msg.content == '!new') {
+                msg.channel.send("to create a new story, type '!new' followed by the name of your new story. Like this: '!new My Story'.\n Keep in mind this is the title players will type every time they play the story, so don't make it too long!");
+            }
+            if(msg.content.startsWith('!new ') && msg.channel.type != 'dm'){  //start a new story in that channel
+            // if(msg.content.startsWith('!new ')){  //now impossible to call in dms
+    
+                //special role permission? no, anyone can make a new story
+                let newStoryName = msg.content.substr(5);
+                console.log("new Story Name: " + newStoryName);
+                let numStories;
+                db.find({type:"story", channel: msg.channel.id}, function(err, docs){
+                    console.log("new story err: " + err);
+                    numStories = docs.length.toString();
+    
+                    for(let i = 0; i < docs.length; i++){
+                        if (docs[i].name == newStoryName){
+                            msg.channel.send('sorry, a story in this channel already has that name. Please pick a new name.');
+                            return;
+                        }
                     }
+                    db.insert({type: "story", channel: msg.channel.id, path: numStories, name: newStoryName, branches: "1", passage: "Welcome to " + newStoryName + "! Please type \"!0\" to begin."});
+    
+                    msg.channel.send('Successfully created new story: ' + newStoryName);
+                });
+            }
+            if(msg.content === '!edit'){
+                //if has admin powers, send to private message
+                if(msg.channel.permissionsFor(msg.author.id).has('ADMINISTRATOR') || msg.channel.permissionsFor(msg.author.id).has('MANAGE_CHANNELS')){
+                    msg.channel.send('Starting edit process in your private messages.');
+                    //EDIT TODO
+                    client.users.cache.get(msg.author.id).send('sorry i don\'t know how to edit yet ._.\'');
+                } else {
+                    // console.log(msg.channel.permissionsFor(msg.author.id));
+                    msg.channel.send('Sorry you don\'t have permission to do that, you need to have ADMINISTRATOR or MANAGE_CHANNELS permissions.');
                 }
-                db.insert({type: "story", channel: msg.channel.id, path: numStories, name: newStoryName, branches: "1", passage: "Welcome to " + newStoryName + "! Please type \"!0\" to begin."});
-
-                msg.channel.send('Successfully created new story: ' + newStoryName);
-            });
-        }
-        if(msg.content === '!edit'){
-            //if has admin powers, send to private message
-            if(msg.channel.permissionsFor(msg.author.id).has('ADMINISTRATOR') || msg.channel.permissionsFor(msg.author.id).has('MANAGE_CHANNELS')){
-                msg.channel.send('Starting edit process in your private messages.');
-                //EDIT TODO
-                client.users.cache.get(msg.author.id).send('sorry i don\'t know how to edit yet ._.\'');
-            } else {
-                // console.log(msg.channel.permissionsFor(msg.author.id));
-                msg.channel.send('Sorry you don\'t have permission to do that, you need to have ADMINISTRATOR or MANAGE_CHANNELS permissions.');
+            }
+        
+            if(msg.content.startsWith('!start')){
+                //if no story yet, prompt with !new
+                db.find({channel: msg.channel.id}, function(err, docs){
+                    console.log("!start err: " + err);
+                    if(docs[0] == null){
+                        msg.channel.send('There\'s no story in this channel yet! Please type "!new *insert storyname*" to create one.');
+                        return;
+                    } else { //good to go
+    
+                        let storyName = msg.content.substr(7);
+                        console.log("story Name: " + storyName);
+                        db.find({channel: msg.channel.id, type: "story", name: storyName }, function(err, docs){
+                        
+                            if(docs.length == 1){//only one story
+                                msg.channel.send('starting! check your private messages please ~ * ~ *');  
+                                // client.users.cache.get(msg.author.id).send('welcome. here is your story:');
+    
+                                //not doing this anymore to prevent mid-story splicing
+                                //check all current stories and see if this user played before but didn't finish, delete that
+                                // for(let i  = currentStories.length - 1; i >= 0; i--){
+                                //     if(currentStories[i].player == msg.author.username){
+                                //         currentStories.splice(i, 1);
+                                //     }
+                                // }
+                                console.log("docs path: " + docs[0].name);
+                                let newPlaythrough = {
+                                    player: msg.author.username,
+                                    channel: msg.channel.id,
+                                    path: docs[0].path,
+                                    isWritingNewNode: false,
+                                    hasFinishedPassage: false
+                                }
+                                currentStories.push(newPlaythrough);
+                                //reset timer
+                                timeSinceLastPlayed = Date.now();
+    
+                                // db.find({path: docs[0].path}, function(err, docs) {
+                                //     console.log('starting story err: ' + err);
+                                client.users.cache.get(msg.author.id).send(docs[0].passage);
+                                // });
+    
+    
+                            } else { //no story by that name
+                                msg.channel.send('Which story would you like to play? Type "!start " followed by one of the following story names: \n');
+                                db.find({channel: msg.channel.id, type: "story"}, function(err, docs){
+                                    console.log('listing story names err: ' + err);
+                                    docs.forEach(doc => msg.channel.send(doc.name + "\n")); 
+                                });
+                                
+                            }
+                        
+                        });
+                    }
+                });
             }
         }
-    
-        if(msg.content.startsWith('!start')){
-            //if no story yet, prompt with !new
-            db.find({channel: msg.channel.id}, function(err, docs){
-                console.log("!start err: " + err);
-                if(docs[0] == null){
-                    msg.channel.send('There\'s no story in this channel yet! Please type "!new *insert storyname*" to create one.');
-                    return;
-                } else { //good to go
-
-                    let storyName = msg.content.substr(7);
-                    console.log("story Name: " + storyName);
-                    db.find({channel: msg.channel.id, type: "story", name: storyName }, function(err, docs){
-                    
-                        if(docs.length == 1){//only one story
-                            msg.channel.send('starting! check your private messages please ~ * ~ *');  
-                            // client.users.cache.get(msg.author.id).send('welcome. here is your story:');
-
-                            //not doing this anymore to prevent mid-story splicing
-                            //check all current stories and see if this user played before but didn't finish, delete that
-                            // for(let i  = currentStories.length - 1; i >= 0; i--){
-                            //     if(currentStories[i].player == msg.author.username){
-                            //         currentStories.splice(i, 1);
-                            //     }
-                            // }
-                            console.log("docs path: " + docs[0].name);
-                            let newPlaythrough = {
-                                player: msg.author.username,
-                                channel: msg.channel.id,
-                                path: docs[0].path,
-                                isWritingNewNode: false,
-                                hasFinishedPassage: false
-                            }
-                            currentStories.push(newPlaythrough);
-                            //reset timer
-                            timeSinceLastPlayed = Date.now();
-
-                            // db.find({path: docs[0].path}, function(err, docs) {
-                            //     console.log('starting story err: ' + err);
-                            client.users.cache.get(msg.author.id).send(docs[0].passage);
-                            // });
-
-
-                        } else { //no story by that name
-                            msg.channel.send('Which story would you like to play? Type "!start " followed by one of the following story names: \n');
-                            db.find({channel: msg.channel.id, type: "story"}, function(err, docs){
-                                console.log('listing story names err: ' + err);
-                                docs.forEach(doc => msg.channel.send(doc.name + "\n")); 
-                            });
-                            
-                        }
-                    
-                    });
-                }
-            });
-        }
-    }
-
+    });
+    // if(isValidChannel || msg.channel.type == 'dm'){
+        
     if (msg.channel.type == "dm") { //DM channel
         //first make sure it's not the bot
         if(msg.author.username == "CommunityCYOA") return;
