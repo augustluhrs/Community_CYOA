@@ -31,8 +31,10 @@ Second Steps
 - ~~perma-run on glitch~~
 - feedback command
 - show which paths have been answered already!
-- ~~test exporting the stories ~~
+- ~~prevent duplicate story names~~
+- ~~test exporting the stories~~
 - ~~figure out how to import to glitch without erasing files -- guess i could just export before importing~~
+- ~~init on specific channel so no server bleed~~
 
 Stretch
 - save that story to file or email it or something
