@@ -34,9 +34,9 @@ setInterval( () => { //checks every hour, if no new players played that hour, cl
 }, clearTimer);
 
 //kill function to stop bot
-process.on('SIGTERM', () => {
-    client.destroy();
-});
+// process.on('SIGTERM', () => {
+//     client.destroy();
+// });
 
 client.once('ready', () => {
   console.log('Ready!');
@@ -72,7 +72,9 @@ function gotMessage(msg) {
     if(msg.content === '!kill bot' && msg.author.id === process.env.AUGUSTID){
         msg.channel.send("Did I do something wrong? I'm... sorr-\n\nBOT TERMINATED").then( () => {
             //no idea if this works or not
-            process.kill(process.pid, 'SIGTERM');
+            // process.kill(process.pid, 'SIGTERM');
+            //no, it was weird, should be fine just to do .destroy though, script will end automatically
+            client.destroy();
         });
     }
 
@@ -177,7 +179,7 @@ function gotMessage(msg) {
         
             if(msg.content.startsWith('!start')){
                 //if no story yet, prompt with !new
-                db.find({channel: msg.channel.id}, function(err, docs){
+                db.find({type: "story", channel: msg.channel.id}, function(err, docs){
                     console.log("!start err: " + err);
                     if(docs[0] == null){
                         msg.channel.send('There\'s no story in this channel yet! Please type "!new *insert storyname*" to create one.');
