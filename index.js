@@ -53,7 +53,7 @@ function gotMessage(msg) {
         db.find({type: "channel", channel: msg.channel.id}, function (err, docs){
             if (docs.length == 0){
                 db.insert({type: "channel", channel: msg.channel.id});
-                msg.channel.send("Yay! This channel is now active and I'll be listening for story commands. Type '!help' for more info.")
+                msg.channel.send("Yay! This channel is now active and I'll be listening for story commands. Type `!help` for more info.")
             } else {
                 msg.channel.send("this channel has already been initialized.");
             }
@@ -75,6 +75,7 @@ function gotMessage(msg) {
             // process.kill(process.pid, 'SIGTERM');
             //no, it was weird, should be fine just to do .destroy though, script will end automatically
             client.destroy();
+            console.log("bot destroyed, exiting");
         });
     }
 
@@ -95,32 +96,32 @@ function gotMessage(msg) {
             if(msg.content === '!help'){
                 //main help section
                 msg.channel.send(`hello! here\'s a list of commands I know:
-                !start : lists the stories ready to play in this channel [channel only]
-                !start STORYNAME : starts a new playthrough of that story in your private messages (case sensitive) [channel only]
-                !new STORYNAME : creates a new story in that channel with the name STORYNAME [channel only]
-                !edit : allows administrators or those with channel permissions to edit stories from their PMs [channel only]
-                !help : brings up this exact message...
-                !help story : brings up more instructions about how to play through a story
-                !help about : gives you an overview of what this is all about!
-                !feedback : [currently disabled] sends a message to your PM so you can report bugs, give notes, request features, etc.
-                !init channel: activates a channel, you have to do this before the bot will work in any channel
-                !remove channel: [currently disabled] de-activates a channel so the bot won't work on it anymore
+                \`!start\` : lists the stories ready to play in this channel [channel only]
+                \`!start STORYNAME\` : starts a new playthrough of that story in your private messages (case sensitive) [channel only]
+                \`!new STORYNAME\` : creates a new story in that channel with the name STORYNAME [channel only]
+                \`!edit\` : allows administrators or those with channel permissions to edit stories from their PMs [channel only]
+                \`!help\` : brings up this exact message...
+                \`!help story\` : brings up more instructions about how to play through a story
+                \`!help about\` : gives you an overview of what this is all about!
+                \`!feedback\` : [currently disabled] sends a message to your PM so you can report bugs, give notes, request features, etc.
+                \`!init channel\`: activates the channel you send this from, you have to do this before the bot will work in any channel
+                \`!remove channel\`: [currently disabled] de-activates the channel so the bot won't work on it anymore
                 Thanks!`);
             }
             if(msg.content === '!help story'){
-                msg.channel.send(`To play a story, type "!start" to see what the current stories in this channel are.
-                Once you know the title of the story you want to play, type "!start" followed by that story\'s name.
+                msg.channel.send(`To play a story, type \`!start\` to see what the current stories in this channel are.
+                Once you know the title of the story you want to play, type \`!start\` followed by that story\'s name.
     
-                For example, if I have a story called "My Story", I\'d type "!start My Story". Keep in mind spaces and capitalization.
+                For example, if I have a story called "My Story", I\'d type \`!start My Story\`. Keep in mind spaces and capitalization.
                 Then I\'ll send you a private message to start the story.
     
                 Once in your PMs, you can read one passage at a time then navigate to the next part of the story by
-                using the commands "!0","!1", and so on, depending on which path you want to go down.
+                using the commands \`!0\`,\`!1\`, and so on, depending on which path you want to go down.
     
                 Some paths lead to empty ends, which are blank passages that no one has written yet -- that means it\'s your turn to write them!
                 First, you\'ll write just the passage, so just the story and no choices branching off of it.
                 Then, after you send me that, I\'ll ask you for the choices one at a time. Just type the word or phrase associated with that choice, i.e. "Go left" or "Say hi to the sentient chair".
-                I\'ll automatically add the "!x" commands. Once you\'ve sent me each choice branching off from that passage, type "END" to finish the process. That\'s it!`);
+                I\'ll automatically add the \`!n\` commands. Once you\'ve sent me each choice branching off from that passage, type \`END\` to finish the process. That\'s it!`);
                     // For more help with the story playthrough, type "!help story" from your PMs.');
             }
             if(msg.content === '!help about'){
@@ -137,11 +138,11 @@ function gotMessage(msg) {
                 This discord bot was made by August Luhrs @augustluhrs or @deadaugust
                 based on a idea from Marie Claire LeBlanc Flanagan @omarieclaire
                 hosted on Glitch.com
-                GitHub Repo at https://github.com/augustluhrs/Community_CYOA -- feel free to make pull requests or fork to make your own!
+                GitHub Repo at https://github.com/augustluhrs/Community_CYOA -- feel free to make pull requests or fork to make your own bots!
                 Thanks so much for playing!`);
             }
             if(msg.content == '!new') {
-                msg.channel.send("to create a new story, type '!new' followed by the name of your new story. Like this: '!new My Story'.\n Keep in mind this is the title players will type every time they play the story, so don't make it too long!");
+                msg.channel.send("to create a new story, type `!new` followed by the name of your new story. Like this: `!new My Story`.\n Keep in mind this is the title players will type every time they play the story, so don't make it too long!");
             }
             if(msg.content.startsWith('!new ') && msg.channel.type != 'dm'){  //start a new story in that channel
             // if(msg.content.startsWith('!new ')){  //now impossible to call in dms
@@ -182,7 +183,7 @@ function gotMessage(msg) {
                 db.find({type: "story", channel: msg.channel.id}, function(err, docs){
                     console.log("!start err: " + err);
                     if(docs[0] == null){
-                        msg.channel.send('There\'s no story in this channel yet! Please type "!new *insert storyname*" to create one.');
+                        msg.channel.send('There\'s no story in this channel yet! Please type `!new STORYNAME` to create one.');
                         return;
                     } else { //good to go
     
@@ -220,7 +221,7 @@ function gotMessage(msg) {
     
     
                             } else { //no story by that name
-                                msg.channel.send('Which story would you like to play? Type "!start " followed by one of the following story names: \n');
+                                msg.channel.send('Which story would you like to play? Type `!start` followed by one of the following story names: \n');
                                 db.find({channel: msg.channel.id, type: "story"}, function(err, docs){
                                     console.log('listing story names err: ' + err);
                                     docs.forEach(doc => msg.channel.send(doc.name + "\n")); 
@@ -308,7 +309,7 @@ function gotMessage(msg) {
                     console.log("err: " + err);
                 });
                 currentStories[myStory].hasFinishedPassage = true;
-                client.users.cache.get(msg.author.id).send('Now I\'ll ask you for the choices branching out from this new passage. \n What\'s option one? Type it in the chat (you don\'t have to worry about the !0 !1 .. etc., just write out the choice. For example "Go Right")');
+                client.users.cache.get(msg.author.id).send('Now I\'ll ask you for the choices branching out from this new passage. \n What\'s option one? Type it in the chat (you don\'t have to worry about the `!0` `!1` .. etc., just write out the choice. For example "Go Right")');
             } else { //finished passage, now update the branches
                 if(msg.content == "END" || msg.content == "end" || msg.content == "End" || msg.content == "end " || msg.content == "END "){ //gotta be a better way to do this.
                     client.users.cache.get(msg.author.id).send('Thanks for playing! Go back to the server channel whenever you want to play again.');
@@ -335,7 +336,7 @@ function gotMessage(msg) {
                         });
                     });
                     
-                    client.users.cache.get(msg.author.id).send('Great. Type in the next option or type END to finish.');
+                    client.users.cache.get(msg.author.id).send('Great. Type in the next option or type `END` to finish.');
                 }
             }
         }

@@ -36,7 +36,7 @@ Second Steps
 - ~~test branch instead of commiting to main~~
 - ~~perma-run on glitch~~
 - feedback command
-- show which paths have been answered already!
+- show which paths have been answered already! go back and make options **bold**
 - ~~prevent duplicate story names~~
 - ~~test exporting the stories~~
 - ~~figure out how to import to glitch without erasing files -- guess i could just export before importing~~
@@ -45,6 +45,7 @@ Second Steps
 - ~~what's up with having two projects running at same time? issue with not turning off bot before reuploading new code? regen token for now...~~
 - ~~add stop function to shutdown bot? SIGTERM && I'm the only one who can~~
 - add code comments for others understanding
+- ~~add backticks for commands in strings~~
 
 Stretch
 - save that story to file or email it or something
