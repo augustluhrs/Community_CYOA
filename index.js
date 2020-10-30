@@ -50,14 +50,16 @@ function gotMessage(msg) {
 
 //adding specific channel init stuff
     if(msg.content === '!init channel'){
-        db.find({type: "channel", channel: msg.channel.id}, function (err, docs){
-            if (docs.length == 0){
-                db.insert({type: "channel", channel: msg.channel.id});
-                msg.channel.send("Yay! This channel is now active and I'll be listening for story commands. Type `!help` for more info.")
-            } else {
-                msg.channel.send("this channel has already been initialized.");
-            }
-        });
+        if(msg.channel.permissionsFor(msg.author.id).has('ADMINISTRATOR') || msg.channel.permissionsFor(msg.author.id).has('MANAGE_CHANNELS')){
+            db.find({type: "channel", channel: msg.channel.id}, function (err, docs){
+                if (docs.length == 0){
+                    db.insert({type: "channel", channel: msg.channel.id});
+                    msg.channel.send("Yay! This channel is now active and I'll be listening for story commands. Type `!help` for more info.")
+                } else {
+                    msg.channel.send("this channel has already been initialized.");
+                }
+            });
+        }
         // activeChannels.forEach( (chan) => {
         //     if(chan.id == msg.channel.id) {
         //         msg.channel.send("this channel has already been initialized.");
@@ -99,12 +101,12 @@ function gotMessage(msg) {
                 \`!start\` : lists the stories ready to play in this channel [channel only]
                 \`!start STORYNAME\` : starts a new playthrough of that story in your private messages (case sensitive) [channel only]
                 \`!new STORYNAME\` : creates a new story in that channel with the name STORYNAME [channel only]
-                \`!edit\` : allows administrators or those with channel permissions to edit stories from their PMs [channel only]
+                \`!edit\` : [currently disabled] allows administrators or those with channel permissions to edit stories from their PMs [channel only] [admins or channel managers only]
                 \`!help\` : brings up this exact message...
                 \`!help story\` : brings up more instructions about how to play through a story
                 \`!help about\` : gives you an overview of what this is all about!
                 \`!feedback\` : [currently disabled] sends a message to your PM so you can report bugs, give notes, request features, etc.
-                \`!init channel\`: activates the channel you send this from, you have to do this before the bot will work in any channel
+                \`!init channel\`: activates the channel you send this from, you have to do this before the bot will work in any channel [admins or channel managers only]
                 \`!remove channel\`: [currently disabled] de-activates the channel so the bot won't work on it anymore
                 Thanks!`);
             }
@@ -161,7 +163,7 @@ function gotMessage(msg) {
                             return;
                         }
                     }
-                    db.insert({type: "story", channel: msg.channel.id, path: numStories, name: newStoryName, branches: "1", passage: "Welcome to " + newStoryName + "! Please type \"!0\" to begin."});
+                    db.insert({type: "story", channel: msg.channel.id, path: numStories, name: newStoryName, branches: "1", passage: "Welcome to " + newStoryName + "! Please type `!0` to begin."});
     
                     msg.channel.send('Successfully created new story: ' + newStoryName);
                 });
@@ -202,7 +204,7 @@ function gotMessage(msg) {
                                 //         currentStories.splice(i, 1);
                                 //     }
                                 // }
-                                console.log("docs path: " + docs[0].name);
+                                console.log("docs story name: " + docs[0].name);
                                 let newPlaythrough = {
                                     player: msg.author.username,
                                     channel: msg.channel.id,
@@ -243,14 +245,19 @@ function gotMessage(msg) {
 
         //find this users story
         let myStory;
-        // for(let i = 0; i < currentStories.length; i++){
-        for(let i = currentStories.length  -1; i >= 0; i--){ //now starting at end 
-            if(currentStories[i].player == msg.author.username) myStory = i; //first time using no {} in if statement...
+        for(let i = 0; i < currentStories.length; i++){
+            if(currentStories[i].player == msg.author.username) myStory = i; // weird way to only get the latest story playthrough
         }
+        // for(let i = currentStories.length  -1; i >= 0; i--){ //now starting at end to only get latest playthrough
+        //     if(currentStories[i].player == msg.author.username)  {
+        //         myStory = i; 
+        //         continue; //could've just started from beginning i guess, but w/e
+        //     }
+        // }
         console.log("my story: " + myStory);
         if(myStory == null) {
             //if they try to start from the dm
-            client.users.cache.get(msg.author.id).send('something\'s wrong, please start from the server channel, not here.');
+            client.users.cache.get(msg.author.id).send('we can\'t meet here like this, what would the others think? please start from the server channel, not here.');
             return;
         }
 
@@ -263,33 +270,37 @@ function gotMessage(msg) {
             db.find({channel: currentStories[myStory].channel, path: currentStories[myStory].path}, function(err, docs){ 
                 console.log('branch err:' + err);
                 console.log("docs:" + docs);
-                branches = parseInt(docs[0].branches);
-
-                //check for next story command
                 let hasStoryProgressed = false;
-                for(let b = 0; b < branches; b++){
-                    // console.log("option: " + b);
-                    if(msg.content == "!" + b){ 
-                        //check to make sure no other player is currently on that node to prevent overwriting new nodes
-                        let isOverlap = false;
-                        for(let p = 0; p < currentStories.length; p++){
-                            // if (p == myStory) continue;
-                            if(currentStories[p].path == currentStories[myStory].path && currentStories[p].id != currentStories[myStory].id){
-                                client.users.cache.get(msg.author.id).send('sorry, someone else is currently on that part of the story. wait a bit for them to finish or please pick another option.');
-                                isOverlap = true;
+
+                if(docs.length != 0){ //have to do this in case they stop halfway through or type rando choices at beginning
+                    branches = parseInt(docs[0].branches);
+
+                    //check for next story command
+                    
+                    for(let b = 0; b < branches; b++){
+                        // console.log("option: " + b);
+                        if(msg.content == "!" + b){ 
+                            //check to make sure no other player is currently on that node to prevent overwriting new nodes
+                            let isOverlap = false;
+                            for(let p = 0; p < currentStories.length; p++){
+                                // if (p == myStory) continue;
+                                if(currentStories[p].path == currentStories[myStory].path && currentStories[p].id != currentStories[myStory].id){
+                                    client.users.cache.get(msg.author.id).send('sorry, someone else is currently on that part of the story. wait a bit for them to finish or please pick another option.');
+                                    isOverlap = true;
+                                }
                             }
-                        }
-                        if(!isOverlap){
-                            console.log('branch chosen: ' + b);
-                            currentStories[myStory].path = currentStories[myStory].path.concat(b); //because concat just returns other string, doesn't modify source?
-                            hasStoryProgressed = true;
+                            if(!isOverlap){
+                                console.log('branch chosen: ' + b);
+                                currentStories[myStory].path = currentStories[myStory].path.concat(b); //because concat just returns other string, doesn't modify source?
+                                hasStoryProgressed = true;
+                            }
                         }
                     }
                 }
                 if(!hasStoryProgressed){ //if they don't type correctly
-                    client.users.cache.get(msg.author.id).send('sorry, thats not an option I understand, please pick again');
+                    client.users.cache.get(msg.author.id).send('sorry, thats not an option I understand, please try again.');
                 } else { //progress story
-                    db.find({path: currentStories[myStory].path}, function(err, docs){
+                    db.find({path: currentStories[myStory].path, finished: true}, function(err, docs){ //finished tag nice because will overwrite any abandoned passages
                         console.log("next section err: " + err);
                         if(docs[0] == null){
                             //new node in the story, trigger prompt
@@ -305,7 +316,7 @@ function gotMessage(msg) {
             if(!currentStories[myStory].hasFinishedPassage){ //has written passage, update the doc
                 console.log('new story from ' + currentStories[myStory].player + " at " + currentStories[myStory].path + ": " + msg.content);
                 //why am i updating this one? not insert?
-                db.update({path: currentStories[myStory].path}, {channel: currentStories[myStory].channel, path: currentStories[myStory].path, passage: msg.content, branches: 0}, {upsert: true}, function(err, newDoc){ //not sure if it matters to update/upsert rather than just insert since if all works, there won't be a doc matching the query...
+                db.update({path: currentStories[myStory].path}, {channel: currentStories[myStory].channel, path: currentStories[myStory].path, passage: msg.content, branches: 0, finished: false}, {upsert: true}, function(err, newDoc){ //not sure if it matters to update/upsert rather than just insert since if all works, there won't be a doc matching the query...
                     console.log("err: " + err);
                 });
                 currentStories[myStory].hasFinishedPassage = true;
@@ -313,19 +324,49 @@ function gotMessage(msg) {
             } else { //finished passage, now update the branches
                 if(msg.content == "END" || msg.content == "end" || msg.content == "End" || msg.content == "end " || msg.content == "END "){ //gotta be a better way to do this.
                     client.users.cache.get(msg.author.id).send('Thanks for playing! Go back to the server channel whenever you want to play again.');
+                    db.update({path: currentStories[myStory].path}, {$set: {finished: true}});
                     // currentStories.splice(myStory,1); //now not splicing until timeout to prevent splicing mid-story multiplayer
-                    // currentStories[myStory].isWritingNewNode = false;
-                    // currentStories[myStory].hasFinishedPassage = false; //not needed but just in case?
-                } else {
-                    //another too slow, really need to learn async/await &| promises again
-                    // let thisPassage;
+
+                    //go back and bold the path that led here
+                    let thisPath = currentStories[myStory].path;
+                    let lastBranch = thisPath[thisPath.length - 1]
+                    // console.log('last digit of path: ' + lastBranch);
+                    // console.log('path ' + thisPath);
+                    let lastPath = thisPath.substr(0, thisPath.length - 1);
+                    // console.log('last path: ' + lastPath);
+                    if(lastPath.length > 1){ //so not changing the first passages b/c no ~*
+                        db.find({path: lastPath}, function(err, docs){
+                            // console.log('last path err:  '+ err);
+                            let prevPassage = docs[0].passage;
+                            //find the string that comes after the chosen branch
+                            let choiceIndex = prevPassage.search("!" + lastBranch); //really needs to be choice Index + 6 for "!b` : "
+                            let endIndex = prevPassage.indexOf("    ~*", choiceIndex);
+                            // console.log(choiceIndex + " asdf " + endIndex);
+                            let lastChoice = prevPassage.substring(choiceIndex + 6, endIndex); //substr start to length, substring start to end
+                            // console.log("last choice: " + lastChoice);
+                            //need to add specifically to that option, in case they're repeating words in multiple options
+                            let thatOption = prevPassage.substring(choiceIndex, endIndex + 6); //now adding +6 because "    ~*"
+                            let boldOption = thatOption.replace(lastChoice, "**" + lastChoice + "**");
+                            // let boldChoice = prevPassage.replace(lastChoice, "**" + lastChoice + "**"); //variable name misleading, it's the whole passage with bold choice updated
+                            let boldPassage = prevPassage.replace(thatOption, boldOption);
+                            db.update({path: lastPath}, { $set: {passage: boldPassage}}); //needs set or interprets as new doc
+                            // console.log('updated: ' + boldChoice);
+
+                            //put this in here so it would happen after using the path to find the last path
+                            currentStories[myStory].isWritingNewNode = false;
+                            currentStories[myStory].hasFinishedPassage = false; //had to do this again to prevent never ending story?? early exit caused bug -- edit: might have been fixed by adding finished tag but idk
+                            currentStories[myStory].path = null; //if not, can just keep typing commands to continue story after finishing passage
+                        });
+                    }
+                } else { //so rn, if they type end as first choice, it becomes a dead end. fine?
+
                     //gotta be a better way to do this, don't know how to access variables from within update
                     db.find({path: currentStories[myStory].path}, function(err, doc){
                         console.log("passageFind err: " + err);
                         // thisPassage = doc[0].passage;
                         db.update({path: currentStories[myStory].path}, { //no upsert
                             $set: {
-                                passage: doc[0].passage.concat("\n\n !" + doc[0].branches + ": " + msg.content)
+                                passage: doc[0].passage.concat("\n\n `!" + doc[0].branches + "` : " + msg.content + "    ~*") //adding this to find where to stop bolding
                                 // passage : thisPassage.concat("\n\n Type !" + branches + ": " + msg.content)
                             },
                             $inc: {

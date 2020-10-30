@@ -44,10 +44,13 @@ Second Steps
 - remove channel
 - ~~what's up with having two projects running at same time? issue with not turning off bot before reuploading new code? regen token for now...~~
 - ~~add stop function to shutdown bot? SIGTERM && I'm the only one who can~~
-- add code comments for others understanding
+- add code comments for others understanding + overview in comments
 - ~~add backticks for commands in strings~~
+- prevent glitch db from getting overwritten
+- ~~add finished tag to passage to fix if someone doesn't finish halfway through~~
 
 Stretch
+- better name?
 - save that story to file or email it or something
 - story visualization tree map
 - real time multiplayer with voting on next node and collab story at end
