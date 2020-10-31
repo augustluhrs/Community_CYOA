@@ -381,7 +381,7 @@ function gotMessage(msg) {
             if(!currentStories[myStory].hasFinishedPassage){ //has written passage, update the doc
                 console.log('new story from ' + currentStories[myStory].player + " at " + currentStories[myStory].path + ": " + msg.content);
                 
-                db.update({path: currentStories[myStory].path}, {channel: currentStories[myStory].channel, path: currentStories[myStory].path, passage: msg.content, branches: 0, finished: false}, {upsert: true}, function(err, newDoc){ //not sure if it matters to update/upsert rather than just insert since if all works, there won't be a doc matching the query...
+                db.update({path: currentStories[myStory].path}, {type: "passage", channel: currentStories[myStory].channel, path: currentStories[myStory].path, passage: msg.content, branches: 0, finished: false}, {upsert: true}, function(err, newDoc){ //not sure if it matters to update/upsert 
                     console.log("new story node err: " + err);
                 });
 

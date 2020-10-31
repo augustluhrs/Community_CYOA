@@ -70,6 +70,7 @@ Second Steps
 - prevent glitch db from getting overwritten
 - ~~add finished tag to passage to fix if someone doesn't finish halfway through~~
 - ~~add bot photo (tree?)~~
+- update err logs to if(err) and add db log with timestamp
 
 Stretch
 - better name?
@@ -78,4 +79,7 @@ Stretch
 - real time multiplayer with voting on next node and collab story at end
 - nodes that can link to existing nodes/return to checkpoints
 - personal stats
+- upgrade to actual database server
+- use indexing if db gets slow
+- could create db from json file instead of db
 
