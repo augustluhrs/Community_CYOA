@@ -1,6 +1,8 @@
 # Community_CYOA
 
-Discord bot for a community-generated Choose-Your-Own-Adventure story where whenever a reader gets to a dead-end node, they have to write that section of the story.
+Discord bot for a community-generated Choose-Your-Own-Adventure story where whenever a reader gets to a dead-end node, it's their turn to write the next section of the story and the choices branching out from it.
+
+by August Luhrs, Oct. 2020
 
 by August Luhrs, Oct. 2020
 
