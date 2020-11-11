@@ -4,8 +4,6 @@ Discord bot for a community-generated Choose-Your-Own-Adventure story where when
 
 by August Luhrs, Oct. 2020
 
-by August Luhrs, Oct. 2020
-
 Based on an idea from Marie Claire LeBlanc Flanagan @omarieclaire
 
 Made with help from Dan Shiffman's Discord Bot tutorials ([this one](https://github.com/CodingTrain/Discord-Bot-Choo-Choo) in particular) 
