@@ -70,7 +70,16 @@ Second Steps
 - prevent glitch db from getting overwritten
 - ~~add finished tag to passage to fix if someone doesn't finish halfway through~~
 - ~~add bot photo (tree?)~~
-- update err logs to if(err) and add db log with timestamp
+- ~~update err logs to if(err) and add db log with timestamp~~
+- have sample.db and local development guide for forking
+- replace the if-hydra with a "command handler" and module.exports ala [Coding Garden Discord Bot](https://github.com/CodingGarden/intro-discord-bot/tree/master/src)
+- figure out the indentation issue in !help
+- error log retrieval command
+
+Privacy Considerations
+- get rid of usernames in db
+- hide db
+- private glitch project if hiding db
 
 Stretch
 - better name?

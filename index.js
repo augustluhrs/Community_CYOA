@@ -77,8 +77,10 @@ let clearTimer = 1000 * 60 * 60; //too lazy to find millis in an hour
 
 setInterval( () => { //checks every hour, if no new players played that hour, clear currentStories
     if(Date.now() - timeSinceLastPlayed >= clearTimer){
-        currentStories = [];
-        console.log('clearing current stories');
+        if (currentStories.length > 0) {
+            currentStories = [];
+            console.log('clearing current stories');
+        }
     }
 }, clearTimer);
 
@@ -99,7 +101,10 @@ function gotMessage(msg) {
         //only admins and people with permissions can init the bot
         if(msg.channel.permissionsFor(msg.author.id).has('ADMINISTRATOR') || msg.channel.permissionsFor(msg.author.id).has('MANAGE_CHANNELS')){
             db.find({type: "channel", channel: msg.channel.id}, function (err, docs){
-                if (docs.length == 0){
+                if (err) {
+                    db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                }
+                if (docs.length == 0) {
                     db.insert({type: "channel", channel: msg.channel.id});
                     msg.channel.send("Yay! This channel is now active and I'll be listening for story commands. Type `!help` for more info.")
                 } else {
@@ -120,7 +125,11 @@ function gotMessage(msg) {
 
     if(msg.content === '!get feedback' && msg.author.id === process.env.AUGUSTID){
         db.find({type: "feedback"}, function(err, docs){
-            console.log('feedback get err: ' + err);
+            // console.log('feedback get err: ' + err);
+            if (err) {
+                db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                console.log('feedback get err: ' + err);
+            }
             docs.forEach( (note) => {
                 client.users.cache.get(msg.author.id).send(note.author + " @ " + note.time + " : " + note.feedback);
             });
@@ -131,6 +140,9 @@ function gotMessage(msg) {
     // ~ * ~ *    help commands, from channel or dms
 
     db.find({type: "channel", channel: msg.channel.id}, function (err, docs){ 
+        if (err) {
+            db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+        }
         if (docs.length != 0 || msg.channel.type == "dm"){ //!help from init channel or dms
 
             //no idea why \n\ was adding such weird spaces in discord, using "template literal"? now
@@ -192,6 +204,9 @@ function gotMessage(msg) {
 
     db.find({type: "channel", channel: msg.channel.id}, function (err, docs){ //make sure the channel has been initialized
         // console.log("valid channel err: " + err);
+        if (err) {
+            db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+        }
         if (docs.length != 0){
             // classique
             if (msg.content === 'ping') {
@@ -210,7 +225,11 @@ function gotMessage(msg) {
                 let numStories;
                 //check to make sure it's not a duplicate, then add it to the db with the default keys
                 db.find({type:"story", channel: msg.channel.id}, function(err, docs){
-                    console.log("new story err: " + err);
+                    // console.log("new story err: " + err);
+                    if (err) {
+                        db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                        console.log("new story err: " + err);
+                    }  
                     numStories = docs.length.toString();
     
                     for(let i = 0; i < docs.length; i++){
@@ -243,7 +262,11 @@ function gotMessage(msg) {
                 if(msg.channel.permissionsFor(msg.author.id).has('ADMINISTRATOR') || msg.channel.permissionsFor(msg.author.id).has('MANAGE_CHANNELS')){
                     msg.channel.send('Fine. I didn\'t want to be here anyway.\n\n NOTE: This does not erase the stories in this channel, it only prevents me from listening to commands until someone says `!init channel` again');
                     db.remove({type: "channel", channel: msg.channel.id}, {}, function(err, num){ //not sure why need the middle {} but it's in the documentation
-                        console.log('remove channel err: ' + err);
+                        if (err) {
+                            db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                            console.log('remove channel err: ' + err);
+                        }  
+                        // console.log('remove channel err: ' + err);
                         console.log('channels removed: ' + num);
                     })
                 } else {
@@ -262,7 +285,11 @@ function gotMessage(msg) {
             if(msg.content.startsWith('!start')){
                 //if no story yet, prompt with !new
                 db.find({type: "story", channel: msg.channel.id}, function(err, docs){
-                    console.log("!start err: " + err);
+                    if (err) {
+                        db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                        console.log("!start err: " + err);
+                    } 
+                    // console.log("!start err: " + err);
                     if(docs[0] == null){
                         msg.channel.send('There\'s no story in this channel yet! Please type `!new STORYNAME` to create one.');
                         return;
@@ -271,7 +298,9 @@ function gotMessage(msg) {
                         let storyName = msg.content.substr(7);
                         console.log("story Name: " + storyName);
                         db.find({channel: msg.channel.id, type: "story", name: storyName }, function(err, docs){
-                        
+                            if (err) {
+                                db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                            } 
                             if(docs.length == 1){//only one story
                                 msg.channel.send('starting! check your private messages please ~ * ~ *');  
                                 console.log("docs story name: " + docs[0].name);
@@ -295,7 +324,11 @@ function gotMessage(msg) {
                             } else { //no story by that name or they didn't include one
                                 msg.channel.send('Which story would you like to play? Type `!start` followed by one of the following story names: \n');
                                 db.find({channel: msg.channel.id, type: "story"}, function(err, docs){
-                                    console.log('listing story names err: ' + err);
+                                    if (err) {
+                                        db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                                        console.log('listing story names err: ' + err);
+                                    } 
+                                    // console.log('listing story names err: ' + err);
                                     docs.forEach(doc => msg.channel.send(doc.name + "\n")); 
                                 });
                             }
@@ -335,8 +368,11 @@ function gotMessage(msg) {
 
             //find the passage they're on
             db.find({channel: currentStories[myStory].channel, path: currentStories[myStory].path}, function(err, docs){ 
-                console.log('branch err:' + err);
-
+                // console.log('branch err:' + err);
+                if (err) {
+                    db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                    console.log('branch err:' + err);
+                } 
                 let hasStoryProgressed = false;
                 let branches;
                 if(docs.length != 0){ //have to do this in case they stop halfway through or type rando choices at beginning
@@ -365,7 +401,11 @@ function gotMessage(msg) {
                     client.users.cache.get(msg.author.id).send('sorry, thats not an option I understand, please try again.');
                 } else { //progress story, send next passage or prompt for new one if they reach an empty
                     db.find({path: currentStories[myStory].path, finished: true}, function(err, docs){ //finished tag nice because will overwrite any abandoned passages
-                        console.log("next section err: " + err);
+                        // console.log("next section err: " + err);
+                        if (err) {
+                            db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                            console.log("next section err: " + err);
+                        } 
                         if(docs[0] == null){
                             //new node in the story, trigger prompt
                             client.users.cache.get(msg.author.id).send("You've reached a blank story node! You get to write this next section. \nPlease type out the next passage of this story, and then I will ask you what you want the options branching out from that passage to be. Just make sure if you want to add a new paragraph, you SHIFT-ENTER, as pressing ENTER will submit the passage.");
@@ -382,7 +422,11 @@ function gotMessage(msg) {
                 console.log('new story from ' + currentStories[myStory].player + " at " + currentStories[myStory].path + ": " + msg.content);
                 
                 db.update({path: currentStories[myStory].path}, {type: "passage", channel: currentStories[myStory].channel, path: currentStories[myStory].path, passage: msg.content, branches: 0, finished: false}, {upsert: true}, function(err, newDoc){ //not sure if it matters to update/upsert 
-                    console.log("new story node err: " + err);
+                    // console.log("new story node err: " + err);
+                    if (err) {
+                        db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                        console.log("new story node err: " + err);
+                    } 
                 });
 
                 currentStories[myStory].hasFinishedPassage = true;
@@ -400,6 +444,9 @@ function gotMessage(msg) {
 
                     if(lastPath.length > 1){ //not changing the first passages b/c no ~*
                         db.find({path: lastPath}, function(err, docs){
+                            if (err) {
+                                db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                            } 
                             let prevPassage = docs[0].passage;
                             //find the string in the previous passage that comes after the chosen branch
                             let choiceIndex = prevPassage.search("!" + lastBranch); //really needs to be choice Index + 6 for "!b` : "
@@ -423,7 +470,11 @@ function gotMessage(msg) {
                     //so rn, if they type end as first choice, it becomes a dead end. fine?
 
                     db.find({path: currentStories[myStory].path}, function(err, doc){
-                        console.log("passageFind err: " + err);
+                        // console.log("passageFind err: " + err);
+                        if (err) {
+                            db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                            console.log("passageFind err: " + err);
+                        } 
 
                         db.update({path: currentStories[myStory].path}, { 
                             $set: {
@@ -433,7 +484,12 @@ function gotMessage(msg) {
                                 branches: 1 //so it knows which !n corresponds to which branch choice (set ^ above with doc[0].branches)
                             }
                         }, function(err, newDocs){
-                            console.log("option err: " + err);
+                            // console.log("option err: " + err);
+                            if (err) {
+                                db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                                console.log("option err: " + err);
+                            }
+                          
                         });
                     });
                     client.users.cache.get(msg.author.id).send('Great. Type in the next option or type `END` to finish.');

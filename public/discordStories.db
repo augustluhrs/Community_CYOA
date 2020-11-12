@@ -18,3 +18,17 @@
 {"type":"feedback","feedback":" i'm testing the feedback","author":"FatherDad","time":1604032403984,"_id":"sOgxrWkOR7fWrrlv"}
 {"channel":"768556747139973171","path":"1021","passage":"end","branches":0,"finished":true,"_id":"zKlU7W9jnATGy1hf"}
 {"channel":"768556747139973171","path":"00000","passage":"whoahhhh???\n\n `!0` : **what**    ~*","branches":1,"finished":true,"_id":"zOS2eRDVYhoiMN12"}
+{"type":"feedback","feedback":" just testing for bugs","author":"FatherDad","time":1605216033429,"_id":"WQXwNsbTBonGOQAW"}
+{"$$deleted":true,"_id":"pfM5CN14ltvL0IOK"}
+{"type":"channel","channel":"768556747139973171","_id":"yJ4Kh1zGqtn4m7fv"}
+{"type":"passage","channel":"768556747139973171","path":"00100","passage":"But now.... stop","branches":0,"finished":false,"_id":"JO22WpgV33pxQts2"}
+{"type":"passage","channel":"768556747139973171","path":"00100","passage":"But now.... stop","branches":0,"finished":true,"_id":"JO22WpgV33pxQts2"}
+{"channel":"768556747139973171","path":"0010","passage":"excellent\n\n `!0` : **only one option**    ~*","branches":1,"finished":true,"_id":"RIjHBWwnp1yh8hrh"}
+{"type":"passage","channel":"768556747139973171","path":"0011100","passage":"FIN","branches":0,"finished":false,"_id":"8Qb0qSkoCxz6i9y3"}
+{"type":"passage","channel":"768556747139973171","path":"0011100","passage":"FIN","branches":0,"finished":true,"_id":"8Qb0qSkoCxz6i9y3"}
+{"channel":"768556747139973171","path":"001110","passage":"cool\n\n `!0` : **fin**    ~*","branches":1,"finished":true,"_id":"03ZUHXD88DFFPync"}
+{"type":"passage","channel":"768556747139973171","path":"001100","passage":"hi","branches":0,"finished":false,"_id":"yWdKo7dL2oGkyuKQ"}
+{"type":"passage","channel":"768556747139973171","path":"001100","passage":"hi\n\n `!0` : no    ~*","branches":1,"finished":false,"_id":"yWdKo7dL2oGkyuKQ"}
+{"type":"passage","channel":"768556747139973171","path":"001100","passage":"hi\n\n `!0` : no    ~*","branches":1,"finished":true,"_id":"yWdKo7dL2oGkyuKQ"}
+{"channel":"768556747139973171","path":"00110","passage":"testing\n\n `!0` : **good**    ~*\n\n `!1` : bad    ~*","branches":2,"finished":true,"_id":"Uz5uZDq29cg0SBKX"}
+{"type":"channel","channel":"770835601436049431","_id":"ViowwkA1VqqnV7f2"}
