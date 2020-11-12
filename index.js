@@ -86,7 +86,9 @@ setInterval( () => { //checks every hour, if no new players played that hour, cl
 
 //the starting functions, starts discord bot and listens for the messages
 client.once('ready', () => {
-  console.log('Ready!');
+  //not sure why i need to do this, but resetting stories b/c of weird story error if dead end
+  currentStories = [];
+  console.log('Ready!' + currentStories.length);
   timeSinceLastPlayed = Date.now(); //for clearing the currentStories array
 });
 
@@ -357,7 +359,7 @@ function gotMessage(msg) {
         //find this users playthrough
         let myStory;
         for(let i = 0; i < currentStories.length; i++){
-            if(currentStories[i].player == msg.author.username) myStory = i; // weird way to only get the latest story playthrough
+            if(currentStories[i] != null && currentStories[i].player == msg.author.username) myStory = i; // weird way to only get the latest story playthrough
         }
         if(myStory == null) { //if they try to start from the dm, they won't have a playthrough ready
             client.users.cache.get(msg.author.id).send('we can\'t meet here like this, what would the others think? please start from the server channel, not here.');
@@ -377,14 +379,14 @@ function gotMessage(msg) {
                 let branches;
                 if(docs.length != 0){ //have to do this in case they stop halfway through or type rando choices at beginning
                     branches = parseInt(docs[0].branches); //adjust number of checks based on how many branches that story node has
-
+                    
                     //check to see if they've chosen a new branch of the story from that passage
                     for(let b = 0; b < branches; b++){
                         if(msg.content == "!" + b){ 
                             //check to make sure no other player is currently on that node to prevent overwriting new nodes
                             let isOverlap = false;
                             for(let p = 0; p < currentStories.length; p++){
-                                if(currentStories[p].path == currentStories[myStory].path && currentStories[p].id != currentStories[myStory].id){
+                                if(currentStories[p] != null && currentStories[p].path == currentStories[myStory].path && currentStories[p].id != currentStories[myStory].id){
                                     client.users.cache.get(msg.author.id).send('sorry, someone else is currently on that part of the story. wait a bit for them to finish or please pick another option.');
                                     isOverlap = true;
                                 }
@@ -396,11 +398,13 @@ function gotMessage(msg) {
                             }
                         }
                     }
+                } else{
+                  console.log("some kind of weird error... " + currentStories[myStory].path)
                 }
                 if(!hasStoryProgressed){ //if they don't type a correct command
                     client.users.cache.get(msg.author.id).send('sorry, thats not an option I understand, please try again.');
                 } else { //progress story, send next passage or prompt for new one if they reach an empty
-                    db.find({path: currentStories[myStory].path, finished: true}, function(err, docs){ //finished tag nice because will overwrite any abandoned passages
+                    db.find({channel: currentStories[myStory].channel, path: currentStories[myStory].path, finished: true}, function(err, docs){ //finished tag nice because will overwrite any abandoned passages
                         // console.log("next section err: " + err);
                         if (err) {
                             db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
@@ -413,6 +417,12 @@ function gotMessage(msg) {
                         } else{
                             //send the next passage
                             client.users.cache.get(msg.author.id).send(docs[0].passage);
+                            //if a dead end, say so and wipe the story
+                            if(docs[0].branches == 0) {
+                                console.log("DEAD END at: " + currentStories[myStory].path);
+                                client.users.cache.get(msg.author.id).send('DEAD END');
+                                currentStories[myStory] = null;
+                            }
                         }
                     });
                 }
@@ -421,7 +431,7 @@ function gotMessage(msg) {
             if(!currentStories[myStory].hasFinishedPassage){ //has written passage, update the doc
                 console.log('new story from ' + currentStories[myStory].player + " at " + currentStories[myStory].path + ": " + msg.content);
                 
-                db.update({path: currentStories[myStory].path}, {type: "passage", channel: currentStories[myStory].channel, path: currentStories[myStory].path, passage: msg.content, branches: 0, finished: false}, {upsert: true}, function(err, newDoc){ //not sure if it matters to update/upsert 
+                db.update({channel: currentStories[myStory].channel, path: currentStories[myStory].path}, {type: "passage", channel: currentStories[myStory].channel, path: currentStories[myStory].path, passage: msg.content, branches: 0, finished: false}, {upsert: true}, function(err, newDoc){ //not sure if it matters to update/upsert 
                     // console.log("new story node err: " + err);
                     if (err) {
                         db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
@@ -435,15 +445,19 @@ function gotMessage(msg) {
                 if(msg.content == "END" || msg.content == "end" || msg.content == "End" || msg.content == "end " || msg.content == "END "){ //gotta be a better way to do this.
                     client.users.cache.get(msg.author.id).send('Thanks for playing! Go back to the server channel whenever you want to play again.');
                     //updating the finished key, if they never get here the passage gets overwritten
-                    db.update({path: currentStories[myStory].path}, {$set: {finished: true}});
+                    db.update({channel: currentStories[myStory].channel, path: currentStories[myStory].path}, {$set: {finished: true}});
 
                     //go back and bold the branch choice that led here
                     let thisPath = currentStories[myStory].path;
                     let lastBranch = thisPath[thisPath.length - 1]
                     let lastPath = thisPath.substr(0, thisPath.length - 1);
+                  
+                    //wait, i can solve the array issue and the weird bug from 11/12 by just making that story null!?
+                    let thisChannel = currentStories[myStory].channel;
+                    currentStories[myStory] = null;
 
                     if(lastPath.length > 1){ //not changing the first passages b/c no ~*
-                        db.find({path: lastPath}, function(err, docs){
+                        db.find({channel: thisChannel, path: lastPath}, function(err, docs){
                             if (err) {
                                 db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
                             } 
@@ -456,27 +470,28 @@ function gotMessage(msg) {
                             let thatOption = prevPassage.substring(choiceIndex, endIndex + 6); //now adding +6 because "    ~*"
                             let boldOption = thatOption.replace(lastChoice, "**" + lastChoice + "**");
                             let boldPassage = prevPassage.replace(thatOption, boldOption);
-                            db.update({path: lastPath}, { $set: {passage: boldPassage}}); //needs set or interprets as new doc
-
+                            db.update({channel: thisChannel, path: lastPath}, { $set: {passage: boldPassage}}); //needs set or interprets as new doc
+                            /*
                             //this is not optimized, reseting a player's playthrough is messy now that i'm timer clearing not splicing the array
                             //put this in here so it would happen after using the path to find the last path
                             currentStories[myStory].isWritingNewNode = false;
                             currentStories[myStory].hasFinishedPassage = false; //had to do this again to prevent never ending story?? early exit caused bug -- edit: might have been fixed by adding finished tag but idk
                             currentStories[myStory].path = null; //if not, can just keep typing commands to continue story after finishing passage
+                            */
                         });
                     }
                 } else { // if they're adding new branch choices to their new passage
 
                     //so rn, if they type end as first choice, it becomes a dead end. fine?
 
-                    db.find({path: currentStories[myStory].path}, function(err, doc){
+                    db.find({channel: currentStories[myStory].channel, path: currentStories[myStory].path}, function(err, doc){
                         // console.log("passageFind err: " + err);
                         if (err) {
                             db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
                             console.log("passageFind err: " + err);
                         } 
 
-                        db.update({path: currentStories[myStory].path}, { 
+                        db.update({channel: currentStories[myStory].channel, path: currentStories[myStory].path}, { 
                             $set: {
                                 passage: doc[0].passage.concat("\n\n `!" + doc[0].branches + "` : " + msg.content + "    ~*") //adding ~* to find where to stop bolding
                             },
