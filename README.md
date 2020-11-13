@@ -51,7 +51,7 @@ Second Steps
 - ~~oh wait, need to update myStory incase people are splicing the array mid-story, or prevent somehow -- using timer to clear array~~
 - ~~setting up channel specific stories, scalable~~
 - ~~giving admins edit access~~
-- edit process
+- ~~edit process~~
 - ~~new story ability~~
 - ~~how to guide for adding to channels~~
 - ~~test branch instead of commiting to main~~
@@ -74,7 +74,10 @@ Second Steps
 - have sample.db and local development guide for forking
 - replace the if-hydra with a "command handler" and module.exports ala [Coding Garden Discord Bot](https://github.com/CodingGarden/intro-discord-bot/tree/master/src)
 - figure out the indentation issue in !help
-- error log retrieval command
+- ~~error log retrieval command~~ 
+- ~~fix the overlap bug~~
+- remove specific story without messing up path of the future stories
+- bold paths of edited branches with pre-existing linked stories
 
 Privacy Considerations
 - get rid of usernames in db
