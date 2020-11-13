@@ -116,7 +116,7 @@ function gotMessage(msg) {
         }
     }
 
-    // ~ * ~ *     kill bot and get feedback , but I'm the only one that can do it
+    // ~ * ~ *     kill bot and get feedback/errors , but I'm the only one that can do it
 
     if(msg.content === '!kill bot' && msg.author.id === process.env.AUGUSTID){
         msg.channel.send("Did I do something wrong? I'm... sorr-\n\nBOT TERMINATED").then( () => {
@@ -138,6 +138,23 @@ function gotMessage(msg) {
         });
         return;
     }
+  
+    if(msg.content === '!get errors' && msg.author.id === process.env.AUGUSTID){
+        db.find({type: "error"}, function(err, docs){
+            // console.log('feedback get err: ' + err);
+            if (err) {
+                db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
+                console.log('error get err lol: ' + err);
+            }
+            if (docs.length == 0) {
+              client.users.cache.get(msg.author.id).send('no errors, very coooool');
+            }
+            docs.forEach( (note) => {
+                client.users.cache.get(msg.author.id).send(note.time + " : " + note.err + " @ " + note.msg);
+            });
+        });
+        return;
+    }
 
     // ~ * ~ *    help commands, from channel or dms
 
@@ -154,7 +171,7 @@ function gotMessage(msg) {
                 \`!start\` : lists the stories ready to play in this channel [channel only]
                 \`!start STORYNAME\` : starts a new playthrough of that story in your private messages (case sensitive) [channel only]
                 \`!new STORYNAME\` : creates a new story in that channel with the name STORYNAME [channel only]
-                \`!edit\` : [currently disabled] allows administrators or those with channel permissions to edit stories from their PMs  [admins or channel managers only]
+                \`!edit\` : when typed from inside a story, erases that passage and allows the player to re-write the passage and branches. Anyone can do this on any passage, please be considerate!
                 \`!help\` : brings up this exact message...
                 \`!help story\` : brings up more instructions about how to play through a story
                 \`!help about\` : gives you an overview of what this is all about!
@@ -211,7 +228,7 @@ function gotMessage(msg) {
         }
         if (docs.length != 0){
             // classique
-            if (msg.content === 'ping') {
+            if (msg.content === '!ping') {
                 msg.channel.send('pong');
             }
 
@@ -249,14 +266,14 @@ function gotMessage(msg) {
 
             // start edit process if has admin powers -- send to DMs
             if(msg.content === '!edit'){
-                if(msg.channel.permissionsFor(msg.author.id).has('ADMINISTRATOR') || msg.channel.permissionsFor(msg.author.id).has('MANAGE_CHANNELS')){
-                    msg.channel.send('Starting edit process in your private messages.');
-                    //EDIT TODO
-                    client.users.cache.get(msg.author.id).send('sorry i don\'t know how to edit yet ._.\'');
-                } else {
+                // if(msg.channel.permissionsFor(msg.author.id).has('ADMINISTRATOR') || msg.channel.permissionsFor(msg.author.id).has('MANAGE_CHANNELS')){
+                    msg.channel.send('To edit, `!start` any story and play until you reach the passage you want to edit. Then type `!edit` instead of any `!n` branch choices. You\'ll then be able to rewrite the passage and branches.');
+                    
+                    // client.users.cache.get(msg.author.id).send('sorry i don\'t know how to edit yet ._.\'');
+                // } else {
                     // console.log(msg.channel.permissionsFor(msg.author.id));
-                    msg.channel.send('Sorry you don\'t have permission to do that, you need to have ADMINISTRATOR or MANAGE_CHANNELS permissions.');
-                }
+                    // msg.channel.send('Sorry you don\'t have permission to do that, you need to have ADMINISTRATOR or MANAGE_CHANNELS permissions.');
+                // }
             }
 
             // remove channel -- stops bot from listening to channel but doesn't erase stories
@@ -276,6 +293,9 @@ function gotMessage(msg) {
                     msg.channel.send('Sorry you don\'t have permission to do that, you need to have ADMINISTRATOR or MANAGE_CHANNELS permissions.');
                 }
             }
+          
+            // remove story -- removes story from channel but doesn't delete the .... wait.
+            // gotta figure out a way to delete story without messing up path num for future stories
 
             // give feedback -- well, just a prompt to get them to do it from their dm's
             if(msg.content === '!feedback'){
@@ -313,7 +333,8 @@ function gotMessage(msg) {
                                     channel: msg.channel.id,
                                     path: docs[0].path,
                                     isWritingNewNode: false,
-                                    hasFinishedPassage: false
+                                    hasFinishedPassage: false,
+                                    isEditing: false
                                 }
                                 currentStories.push(newPlaythrough);
 
@@ -349,7 +370,7 @@ function gotMessage(msg) {
         if(msg.author.username == "CommunityCYOA") return;
 
         //if they're sending feedback
-        if(msg.content.startsWith('!feedback')){
+        if(msg.content.startsWith('!feedback ')){
             let newFeedback = msg.content.substr(9);
             db.insert({type: "feedback", feedback: newFeedback, author: msg.author.username, time: Date.now()}); //should this be anon? maybe change in future. not getting channel either.
             client.users.cache.get(msg.author.id).send("your feedback has been received, thanks so much!");
@@ -378,26 +399,37 @@ function gotMessage(msg) {
                 let hasStoryProgressed = false;
                 let branches;
                 if(docs.length != 0){ //have to do this in case they stop halfway through or type rando choices at beginning
-                    branches = parseInt(docs[0].branches); //adjust number of checks based on how many branches that story node has
-                    
-                    //check to see if they've chosen a new branch of the story from that passage
-                    for(let b = 0; b < branches; b++){
-                        if(msg.content == "!" + b){ 
-                            //check to make sure no other player is currently on that node to prevent overwriting new nodes
-                            let isOverlap = false;
-                            for(let p = 0; p < currentStories.length; p++){
-                                if(currentStories[p] != null && currentStories[p].path == currentStories[myStory].path && currentStories[p].id != currentStories[myStory].id){
-                                    client.users.cache.get(msg.author.id).send('sorry, someone else is currently on that part of the story. wait a bit for them to finish or please pick another option.');
-                                    isOverlap = true;
+                    //edit check
+                    if (msg.content == "!edit") {
+                      hasStoryProgressed = true;
+                      currentStories[myStory].isEditing = true;
+                      console.log("editing at: " + currentStories[myStory].path);
+                      client.users.cache.get(msg.author.id).send('You can now rewrite this passage and the branches. You can add new branches, but if you try and remove or rearrange the order of branches it **will not** change the order of the next story passages -- keep the branches in the same order if you can!\n\n');
+                    } else {
+                        branches = parseInt(docs[0].branches); //adjust number of checks based on how many branches that story node has
+                        //check to see if they've chosen a new branch of the story from that passage
+                        for(let b = 0; b < branches; b++){
+                            if(msg.content == "!" + b){ 
+                                //check to make sure no other player is currently on that node to prevent overwriting new nodes
+                                let isOverlap = false;
+                                let chosenPath = currentStories[myStory].path.concat(b);
+                                for(let p = 0; p < currentStories.length; p++){
+                                    if(currentStories[p] != null && currentStories[p].path == chosenPath && //duh, was checking current path not next path
+                                       currentStories[p].channel == currentStories[myStory].channel && currentStories[p].id != currentStories[myStory].id){
+                                        client.users.cache.get(msg.author.id).send('sorry, someone else is currently on that part of the story. wait a bit for them to finish or please pick another option. You can also start over by going back to the channel.');
+                                        isOverlap = true;
+                                        console.log('overlap!');
+                                        db.insert({type: "feedback", feedback: "overlap at " + currentStories[myStory].channel + "--" + chosenPath, author: msg.author.username, time: Date.now()});
+                                    }
+                                }
+                                if(!isOverlap){
+                                    console.log('branch chosen: ' + b);
+                                    currentStories[myStory].path = currentStories[myStory].path.concat(b);
+                                    hasStoryProgressed = true;
                                 }
                             }
-                            if(!isOverlap){
-                                console.log('branch chosen: ' + b);
-                                currentStories[myStory].path = currentStories[myStory].path.concat(b);
-                                hasStoryProgressed = true;
-                            }
                         }
-                    }
+                    } 
                 } else{
                   console.log("some kind of weird error... " + currentStories[myStory].path)
                 }
@@ -410,10 +442,11 @@ function gotMessage(msg) {
                             db.insert({type: "error", err: err, msg: msg.content, channel: msg.channel.id, time: Date.now()});
                             console.log("next section err: " + err);
                         } 
-                        if(docs[0] == null){
+                        if(docs[0] == null || currentStories[myStory].isEditing){
                             //new node in the story, trigger prompt
                             client.users.cache.get(msg.author.id).send("You've reached a blank story node! You get to write this next section. \nPlease type out the next passage of this story, and then I will ask you what you want the options branching out from that passage to be. Just make sure if you want to add a new paragraph, you SHIFT-ENTER, as pressing ENTER will submit the passage.");
                             currentStories[myStory].isWritingNewNode = true;
+                            currentStories[myStory].isEditing = false; //too soon? hope not
                         } else{
                             //send the next passage
                             client.users.cache.get(msg.author.id).send(docs[0].passage);
