@@ -12,6 +12,27 @@ and Shawn Van Every's recommendation to use nedb for the database stuff!
 
 Discord App Icon the album art for The Fountain LP by [Nicole Gustafsson](http://www.nimasprout.com/vinyl)
 
+## OVERVIEW
+
+Everything takes place within the message event.
+  
+If the channel is initialized, the player can type messages in that channel to make new stories, select which story to play, and call any other commands (i.e !help). 
+ 
+Any messages sent from the player's private message with the bot are read, but the bot only responds if that player has `!start`-ed the story from the server. When the player starts the story, a new playthrough is pushed to the currentStories array. That array is where all the magic happens -- it's what's referenced and adjusted as the player goes through the story and how the bot knows which passage to find in the database.
+ 
+The story is represented most in the currentStories array by the "path" variable. You can imagine the path as the player's choices at each passage's branches laid flat. For example:
+  
+                         Passage 0
+               Branch 0, [Branch 1], Branch 2
+                              |
+                              |
+                         Passage 01           
+                     [Branch 0], Branch 1
+                         |
+                         |
+                    Passage 010
+  
+     would be path: 010
 
 ## HOW TO ADD TO YOUR SERVER
 
